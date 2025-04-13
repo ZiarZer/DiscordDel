@@ -22,6 +22,16 @@ const Button = styled.button`
   }
 `;
 
+const Input = styled.input`
+  border-radius: 8px;
+  font-size: 0.9em;
+  padding: 0.6em 1.2em;
+  width: 14em;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+`;
+
 export {
-  Button
-}
+  Button,
+  Input,
+};

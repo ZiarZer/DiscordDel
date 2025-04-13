@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styled from 'styled-components';
 
-import { Button } from './components';
-import { version } from "../package.json";
+import { version } from '../package.json';
+import { ActionInputBar } from './components/ActionInputBar'
 
 const Wrapper = styled.div`
   display: flex;
@@ -23,22 +23,43 @@ const Version = styled.p`
 const WEBSOCKET_URL = 'ws://127.0.0.1:8765';
 
 function App() {
-  const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(
-    WEBSOCKET_URL,
-    { share: false, shouldReconnect: () => true },
-  );
-  const messageReceivedAt = useMemo(
-    () => (lastMessage ? new Date(Date.now()).toISOString() : '---'),
-    [lastMessage],
+  const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(WEBSOCKET_URL, {
+    share: false,
+    shouldReconnect: () => true,
+  }) as {
+    sendJsonMessage: any
+    lastMessage: any
+    lastJsonMessage: null | { body: object; type: string }
+  };
+
+  const [authorizationToken, setAuthorizationToken] = useState<string>('');
+  useEffect(() => {
+    if (lastJsonMessage?.type === 'LOGIN') {
+      console.log(lastJsonMessage.body);
+    }
+  }, [lastJsonMessage, lastMessage]);
+
+  const sendLoginRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'LOGIN',
+        body: { authorizationToken },
+      }),
+    [authorizationToken, sendJsonMessage],
   );
 
   return (
     <>
       <Wrapper>
         DiscordDel
-        <Button onClick={() => sendJsonMessage('test')}>Send WS message</Button>
-        <span>{`Received message: ${lastJsonMessage}`}</span>
-        <span>{messageReceivedAt}</span>
+        <ActionInputBar
+          inputPlaceholder='Authorization token'
+          buttonText='Authenticate'
+          enabled={true}
+          secret
+          onEdit={(e) => setAuthorizationToken(e?.target.value)}
+          onSubmit={sendLoginRequest}
+        />
       </Wrapper>
       <Version>{version}</Version>
     </>

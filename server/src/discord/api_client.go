@@ -1,10 +1,14 @@
 package discord
 
 import (
+	"fmt"
 	"net/http"
 )
 
-func Request(method string, url string, authorizationToken string) (*http.Response, error) {
+const DiscordApibaseURL = "https://discord.com/api/v9"
+
+func request(method string, endpoint string, authorizationToken string) (*http.Response, error) {
+	url := fmt.Sprintf("%s/%s", DiscordApibaseURL, endpoint)
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
@@ -16,4 +20,8 @@ func Request(method string, url string, authorizationToken string) (*http.Respon
 		return nil, err
 	}
 	return resp, nil
+}
+
+func login(authorizationToken string) (*http.Response, error) {
+	return request("GET", "users/@me", authorizationToken)
 }

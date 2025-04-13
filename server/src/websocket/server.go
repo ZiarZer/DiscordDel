@@ -22,15 +22,7 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	for {
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
-			utils.Log("Failed to read WebSocket message from client", utils.ERROR)
-			break
-		}
-		err = conn.WriteMessage(messageType, message)
-		if err != nil {
-			utils.Log("Failed to send WebSocket message to client", utils.ERROR)
-		}
+		handleMessage(conn)
 	}
 }
 

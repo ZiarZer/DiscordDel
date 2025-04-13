@@ -19,10 +19,15 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.Log("Failed to upgrade connection to WebSocket", utils.ERROR)
 	}
+	utils.Log("Connected to client via WebSocket", utils.INFO)
 	defer conn.Close()
 
 	for {
-		handleMessage(conn)
+		err := handleMessage(conn)
+		if err != nil {
+			utils.Log("Closing server WebSocket", utils.INFO)
+			return
+		}
 	}
 }
 

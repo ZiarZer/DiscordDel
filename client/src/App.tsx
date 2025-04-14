@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styled from 'styled-components';
 
 import { version } from '../package.json';
-import { ActionInputBar } from './components/ActionInputBar'
-import { StatusMessage } from './components/StatusMessage';
-import { InfoList } from './components/InfoList';
+import { Section } from './components/Section';
 
 const Wrapper = styled.div`
   display: flex;
@@ -22,20 +20,6 @@ const Version = styled.p`
   bottom: 0;
 `;
 
-const SectionWrapper = styled.div`
-  background-color: #ffffff30;
-  border-radius: 1em;
-  padding: 1em;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-`;
-
-const SectionTitle = styled.h3`
-  margin: 0;
-`;
-
 const WEBSOCKET_URL = 'ws://127.0.0.1:8765';
 
 const userSectionInfoFields = [
@@ -45,6 +29,9 @@ const userSectionInfoFields = [
 
 const displayUsername = (user: User|null) =>
   user?.discriminator === '0' ? `@${user?.username}` : `${user?.username}#${user?.discriminator}`;
+
+const getUserAvatarUrl = (user: User) =>
+  `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
 
 function App() {
   const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(WEBSOCKET_URL, {
@@ -57,6 +44,14 @@ function App() {
   };
 
   const [currentUser, setCurrentUser] = useState<User>(null);
+
+  const userStatusMessage = useMemo(
+    () =>
+      currentUser != null
+        ? `Successfully logged in as ${displayUsername(currentUser)}`
+        : 'Not logged in',
+    [currentUser]
+  );
 
   useEffect(() => {
     if (lastJsonMessage?.type === 'LOGIN') {
@@ -76,31 +71,20 @@ function App() {
   return (
     <>
       <Wrapper>
-        <SectionWrapper>
-          <SectionTitle>User</SectionTitle>
-          <ActionInputBar
-            inputPlaceholder='Authorization token'
-            buttonText='Authenticate'
-            enabled={true}
-            secret
-            onSubmit={sendLoginRequest}
-          />
-          <StatusMessage
-            message={
-              currentUser != null
-                ? `Successfully logged in as ${displayUsername(currentUser)}`
-                : 'Not logged in'
-            }
-            success={currentUser != null}
-          />
-          <InfoList
-            currentObject={currentUser}
-            fields={userSectionInfoFields}
-            getAvatarUrl={(user) =>
-              `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-            }
-          />
-        </SectionWrapper>
+        <Section
+          title="User"
+          actionInputBar={{
+            inputPlaceholder: 'Authorization token',
+            buttonLabel: 'Authenticate',
+            enabled: true,
+            secret: true,
+            onSubmit: sendLoginRequest,
+          }}
+          statusMessage={userStatusMessage}
+          currentObject={currentUser}
+          infoFields={userSectionInfoFields}
+          getAvatarUrl={getUserAvatarUrl}
+        />
       </Wrapper>
       <Version>{version}</Version>
     </>

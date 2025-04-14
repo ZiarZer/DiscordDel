@@ -27,7 +27,6 @@ export function ActionInputBar({
   buttonText,
   enabled = false,
   secret = false,
-  onEdit,
   onSubmit,
 }: {
   inputPlaceholder: string
@@ -35,10 +34,10 @@ export function ActionInputBar({
   enabled?: boolean
   secret?: boolean
   onSubmit: (param: string) => void
-  onEdit: (e: ChangeEvent) => void
 }) {
   const [showSecret, setShowSecret] = useState(!secret);
   const inputRef = useRef<HTMLInputElement>(null);
+  const id = `display-checkbox-${Math.floor(Math.random() * 10)}`;
 
   return (
     <Wrapper>
@@ -46,7 +45,6 @@ export function ActionInputBar({
         type={showSecret ? 'text' : 'password'}
         placeholder={inputPlaceholder}
         ref={inputRef}
-        onChange={onEdit}
       />
       <Button disabled={!enabled} onClick={() => onSubmit(inputRef.current?.value ?? '')}>
         {buttonText}
@@ -55,10 +53,11 @@ export function ActionInputBar({
         <>
           <input
             type='checkbox'
-            id='display-token-checkbox'
+            id={id}
             onChange={() => setShowSecret(!showSecret)}
+            style={{ marginLeft: '1em' }}
           />
-          <Label htmlFor='display-token-checkbox'>Display token</Label>
+          <Label htmlFor={id}>Display</Label>
         </>
       ) : null}
     </Wrapper>

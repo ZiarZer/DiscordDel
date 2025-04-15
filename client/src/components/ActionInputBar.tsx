@@ -28,12 +28,14 @@ export function ActionInputBar({
   enabled = false,
   secret = false,
   onSubmit,
+  onChange = () => {},
 }: {
   inputPlaceholder: string
   buttonText: string
   enabled?: boolean
   secret?: boolean
-  onSubmit: (param: string) => void
+  onSubmit: () => void
+  onChange: () => void
 }) {
   const [showSecret, setShowSecret] = useState(!secret);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,8 +47,14 @@ export function ActionInputBar({
         type={showSecret ? 'text' : 'password'}
         placeholder={inputPlaceholder}
         ref={inputRef}
+        onChange={onChange}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onSubmit();
+          }
+        }}
       />
-      <Button disabled={!enabled} onClick={() => onSubmit(inputRef.current?.value ?? '')}>
+      <Button disabled={!enabled} onClick={onSubmit}>
         {buttonText}
       </Button>
       {secret ? (

@@ -12,6 +12,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1em;
+  width: 100%;
 `;
 
 const SectionTitle = styled.h3`
@@ -26,6 +27,7 @@ export function Section({
     enabled = false,
     secret = false,
     onSubmit,
+    onChange,
   },
   statusMessage,
   currentObject,
@@ -36,11 +38,12 @@ export function Section({
     <Wrapper>
       <SectionTitle>{title}</SectionTitle>
       <ActionInputBar
-        inputPlaceholder="Authorization token"
-        buttonText="Authenticate"
-        enabled={true}
-        secret
+        inputPlaceholder={inputPlaceholder}
+        buttonText={buttonLabel}
+        enabled={enabled}
+        secret={secret}
         onSubmit={onSubmit}
+        onChange={onChange}
       />
       <StatusMessage message={statusMessage} success={currentObject != null} />
       <InfoList

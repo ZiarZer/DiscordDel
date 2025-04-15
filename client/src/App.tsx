@@ -12,6 +12,7 @@ const Wrapper = styled.div`
   align-items: center;
   padding: 1em;
   gap: 1em;
+  width: fit-content;
 `;
 
 const Version = styled.p`
@@ -26,12 +27,15 @@ const userSectionInfoFields = [
   { label: 'ID', fieldName: 'id' },
   { label: 'Display name', fieldName: 'global_name' },
 ];
+const guildSectionInfoFields = [{ label: 'ID', fieldName: 'id' }];
 
 const displayUsername = (user: User|null) =>
   user?.discriminator === '0' ? `@${user?.username}` : `${user?.username}#${user?.discriminator}`;
 
 const getUserAvatarUrl = (user: User) =>
   `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+const getGuildIconUrl = (guild: Guild) =>
+  `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
 
 function App() {
   const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(WEBSOCKET_URL, {
@@ -44,6 +48,7 @@ function App() {
   };
 
   const [currentUser, setCurrentUser] = useState<User>(null);
+  const [loadedGuild, setLoadedGuild] = useState<Guild>(null);
 
   const userStatusMessage = useMemo(
     () =>
@@ -52,20 +57,41 @@ function App() {
         : 'Not logged in',
     [currentUser]
   );
+  const guildStatusMessage = useMemo(
+    () =>
+      loadedGuild != null
+        ? `Successfully loaded guild ${loadedGuild.name}`
+        : 'No guild loaded',
+    [loadedGuild]
+  );
 
   useEffect(() => {
     if (lastJsonMessage?.type === 'LOGIN') {
       setCurrentUser(lastJsonMessage.body);
+    }else if (lastJsonMessage?.type === 'GET_GUILD') {
+      setLoadedGuild(lastJsonMessage.body);
     }
   }, [lastJsonMessage, lastMessage]);
 
+  const [authorizationToken, setAuthorizationToken] = useState('');
+  const [inputGuildId, setInputGuildId] = useState('');
+
   const sendLoginRequest = useCallback(
-    (authorizationToken: string) =>
+    () =>
       sendJsonMessage({
         type: 'LOGIN',
         body: { authorizationToken },
       }),
-    [sendJsonMessage],
+    [sendJsonMessage, authorizationToken],
+  );
+
+  const sendGetGuildRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'GET_GUILD',
+        body: { authorizationToken, guildId: inputGuildId },
+      }),
+    [sendJsonMessage, authorizationToken, inputGuildId],
   );
 
   return (
@@ -79,11 +105,26 @@ function App() {
             enabled: true,
             secret: true,
             onSubmit: sendLoginRequest,
+            onChange: (e: ChangeEvent) => setAuthorizationToken(e.target.value),
           }}
           statusMessage={userStatusMessage}
           currentObject={currentUser}
           infoFields={userSectionInfoFields}
           getAvatarUrl={getUserAvatarUrl}
+        />
+        <Section
+          title="Guild"
+          actionInputBar={{
+            inputPlaceholder: 'Guild ID',
+            buttonLabel: 'Load guild by ID',
+            enabled: currentUser != null,
+            onSubmit: sendGetGuildRequest,
+            onChange: (e: ChangeEvent) => setInputGuildId(e.target.value),
+          }}
+          statusMessage={guildStatusMessage}
+          currentObject={loadedGuild}
+          infoFields={guildSectionInfoFields}
+          getAvatarUrl={getGuildIconUrl}
         />
       </Wrapper>
       <Version>{version}</Version>

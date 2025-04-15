@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { version } from '../package.json';
 import { Section } from './components/Section';
+import { CHANNEL_TYPES } from './constants';
 
 const Wrapper = styled.div`
   display: flex;
@@ -28,6 +29,18 @@ const userSectionInfoFields = [
   { label: 'Display name', fieldName: 'global_name' },
 ];
 const guildSectionInfoFields = [{ label: 'ID', fieldName: 'id' }];
+const channelSectionInfoFields = [
+  { label: "ID", fieldName: "id" },
+  { label: "Last message ID", fieldName: "last_message_id" },
+  {
+    label: "Type",
+    fieldName: "type",
+    display: (v: keyof typeof CHANNEL_TYPES) => CHANNEL_TYPES[v],
+  },
+  { label: "Parent ID", fieldName: "parent_id" },
+  { label: "Guild ID", fieldName: "guild_id" },
+  { label: "Message count", fieldName: "message_count" },
+];
 
 const displayUsername = (user: User|null) =>
   user?.discriminator === '0' ? `@${user?.username}` : `${user?.username}#${user?.discriminator}`;
@@ -49,6 +62,7 @@ function App() {
 
   const [currentUser, setCurrentUser] = useState<User>(null);
   const [loadedGuild, setLoadedGuild] = useState<Guild>(null);
+  const [loadedChannel, setLoadedChannel] = useState<Channel>(null);
 
   const userStatusMessage = useMemo(
     () =>
@@ -64,17 +78,27 @@ function App() {
         : 'No guild loaded',
     [loadedGuild]
   );
+  const channelStatusMessage = useMemo(
+    () =>
+      loadedChannel != null
+        ? `Successfully loaded channel ${loadedChannel.name}`
+        : 'No channel loaded',
+    [loadedChannel]
+  );
 
   useEffect(() => {
     if (lastJsonMessage?.type === 'LOGIN') {
       setCurrentUser(lastJsonMessage.body);
-    }else if (lastJsonMessage?.type === 'GET_GUILD') {
+    } else if (lastJsonMessage?.type === 'GET_GUILD') {
       setLoadedGuild(lastJsonMessage.body);
+    } else if (lastJsonMessage?.type === 'GET_CHANNEL') {
+      setLoadedChannel(lastJsonMessage.body);
     }
   }, [lastJsonMessage, lastMessage]);
 
   const [authorizationToken, setAuthorizationToken] = useState('');
   const [inputGuildId, setInputGuildId] = useState('');
+  const [inputChannelId, setInputChannelId] = useState('');
 
   const sendLoginRequest = useCallback(
     () =>
@@ -92,6 +116,14 @@ function App() {
         body: { authorizationToken, guildId: inputGuildId },
       }),
     [sendJsonMessage, authorizationToken, inputGuildId],
+  );
+  const sendGetChannelRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'GET_CHANNEL',
+        body: { authorizationToken, channelId: inputChannelId },
+      }),
+    [sendJsonMessage, authorizationToken, inputChannelId],
   );
 
   return (
@@ -125,6 +157,20 @@ function App() {
           currentObject={loadedGuild}
           infoFields={guildSectionInfoFields}
           getAvatarUrl={getGuildIconUrl}
+        />
+        <Section
+          title="Channel"
+          actionInputBar={{
+            inputPlaceholder: 'Channel ID',
+            buttonLabel: 'Load channel by ID',
+            enabled: currentUser != null,
+            onSubmit: sendGetChannelRequest,
+            onChange: (e: ChangeEvent) => setInputChannelId(e.target.value),
+          }}
+          statusMessage={channelStatusMessage}
+          currentObject={loadedChannel}
+          infoFields={channelSectionInfoFields}
+          getAvatarUrl={() => null}
         />
       </Wrapper>
       <Version>{version}</Version>

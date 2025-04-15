@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Snowflake } from "./Snowflake";
+import { ReactElement, useCallback } from "react";
 
 const ListWrapper = styled.div`
   display: flex;
@@ -26,29 +27,44 @@ const Wrapper = styled.div`
   align-items: center;
 `;
 
+type FieldConfig = {
+  fieldName: string;
+  label: string;
+  display: (value?: string | number, isId?: boolean) => string | ReactElement
+}
+
 export function InfoList({
   currentObject,
   fields,
   getAvatarUrl,
 }: {
-  data: Array<{ label: string; value: string }>;
+  currentObject: Record<string, string | number>;
+  fields: Array<FieldConfig>;
+  getAvatarUrl: (currentObject: object) => string;
 }) {
+  const defaultDisplay = useCallback((value?: string | number, isId = false) => {
+    return isId ? <Snowflake snowflakeId={value} /> : 
+    (value ?? '---')
+  }, []);
+
   return (
     <Wrapper>
       <Avatar src={currentObject ? getAvatarUrl(currentObject) : undefined} />
       <ListWrapper>
-        {fields.map(({ label, fieldName }) => {
-          return (
-            <span key={fieldName}>
-              <Bold>{label}:</Bold>&nbsp;
-              {label.endsWith("ID") ? (
-                <Snowflake snowflakeId={currentObject?.[fieldName]} />
-              ) : (
-                currentObject?.[fieldName] ?? "---"
-              )}
-            </span>
-          );
-        })}
+        {fields.map(
+          ({
+            label,
+            fieldName,
+            display = defaultDisplay,
+          }) => {
+            return (
+              <span key={fieldName}>
+                <Bold>{label}:</Bold>&nbsp;
+                {display(currentObject?.[fieldName], label.endsWith('ID'))}
+              </span>
+            );
+          }
+        )}
       </ListWrapper>
     </Wrapper>
   );

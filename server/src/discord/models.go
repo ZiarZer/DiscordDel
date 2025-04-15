@@ -7,3 +7,9 @@ type User struct {
 	GlobalName    string `json:"global_name"`
 	Avatar        string `json:"avatar"`
 }
+
+type Guild struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Icon string `json:"icon"`
+}

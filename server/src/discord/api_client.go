@@ -25,3 +25,7 @@ func request(method string, endpoint string, authorizationToken string) (*http.R
 func login(authorizationToken string) (*http.Response, error) {
 	return request("GET", "users/@me", authorizationToken)
 }
+
+func getGuildById(guildId string, authorizationToken string) (*http.Response, error) {
+	return request("GET", fmt.Sprintf("guilds/%s", guildId), authorizationToken)
+}

@@ -13,3 +13,13 @@ type Guild struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
 }
+
+type Channel struct {
+	Id            string `json:"id"`
+	Name          string `json:"name"`
+	LastMessageId string `json:"last_message_id"`
+	Type          int    `json:"type"`
+	ParentId      string `json:"parent_id"`
+	GuildId       string `json:"guild_id"`
+	MessageCount  int    `json:"message_count"`
+}

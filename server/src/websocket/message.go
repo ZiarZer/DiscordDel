@@ -26,9 +26,15 @@ type GetGuildRequestBody struct {
 	GuildId            string `json:"guildId"`
 }
 
+type GetChannelRequestBody struct {
+	AuthorizationToken string `json:"authorizationToken"`
+	ChannelId          string `json:"channelId"`
+}
+
 var bodyConstructors = map[string]func() RequestBody{
-	"LOGIN":     func() RequestBody { return &LoginRequestBody{} },
-	"GET_GUILD": func() RequestBody { return &GetGuildRequestBody{} },
+	"LOGIN":       func() RequestBody { return &LoginRequestBody{} },
+	"GET_GUILD":   func() RequestBody { return &GetGuildRequestBody{} },
+	"GET_CHANNEL": func() RequestBody { return &GetChannelRequestBody{} },
 }
 
 func handleMessage(conn *websocket.Conn) error {
@@ -93,6 +99,30 @@ func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
 	stringResponse, err := json.Marshal(response)
 	if err != nil {
 		utils.Log("Failed to serialize GET_GUILD response", utils.FATAL)
+		return err
+	}
+	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
+	if err != nil {
+		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
+		return err
+	}
+	return nil
+}
+
+func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
+	channel := discord.GetChannel(body.ChannelId, body.AuthorizationToken)
+	jsonChannel, err := json.Marshal(channel)
+	if err != nil {
+		utils.Log("Failed to serialize channel info", utils.ERROR)
+		return err
+	}
+	response := Message{
+		Type: "GET_CHANNEL",
+		Body: json.RawMessage(jsonChannel),
+	}
+	stringResponse, err := json.Marshal(response)
+	if err != nil {
+		utils.Log("Failed to serialize GET_CHANNEL response", utils.FATAL)
 		return err
 	}
 	err = conn.WriteMessage(websocket.TextMessage, stringResponse)

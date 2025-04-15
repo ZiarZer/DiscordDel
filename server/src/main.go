@@ -7,7 +7,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/websocket"
 )
 
-const Version = "0.0.4"
+const Version = "0.1.0"
 
 func main() {
 	utils.Log(fmt.Sprintf("DiscordDel - v%s", Version), nil)

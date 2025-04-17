@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { ActionInputBar } from "./ActionInputBar";
 import { StatusMessage } from "./StatusMessage";
 import { InfoList } from "./InfoList";
+import { Button } from ".";
 
 const Wrapper = styled.div`
   background-color: #ffffff30;
@@ -19,6 +20,11 @@ const SectionTitle = styled.h3`
   margin: 0;
 `;
 
+const ActionsContainer = styled.div`
+  display: flex;
+  justify-content: space-evenly;
+`;
+
 export function Section({
   title,
   actionInputBar: {
@@ -33,6 +39,7 @@ export function Section({
   currentObject,
   infoFields,
   getAvatarUrl,
+  actions = [],
 }) {
   return (
     <Wrapper>
@@ -51,6 +58,11 @@ export function Section({
         fields={infoFields}
         getAvatarUrl={getAvatarUrl}
       />
+      <ActionsContainer>
+        {actions.map(({ label, onClick }) => (
+          <Button onClick={onClick}>{label}</Button>
+        ))}
+      </ActionsContainer>
     </Wrapper>
   );
 }

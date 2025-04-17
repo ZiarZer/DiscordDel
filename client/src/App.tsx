@@ -154,6 +154,11 @@ function App() {
     [sendJsonMessage, authorizationToken, inputGuildId]
   );
 
+  const userSectionActions = [{ label: 'Get user guilds', onClick: sendGetUserGuildsRequest }];
+  const guildSectionActions = [
+    { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
+  ];
+
   return (
     <>
       <Wrapper>
@@ -172,6 +177,7 @@ function App() {
             currentObject={currentUser}
             infoFields={userSectionInfoFields}
             getAvatarUrl={getUserAvatarUrl}
+            actions={userSectionActions}
           />
           <Section
             title="Guild"
@@ -186,6 +192,7 @@ function App() {
             currentObject={loadedGuild}
             infoFields={guildSectionInfoFields}
             getAvatarUrl={getGuildIconUrl}
+            actions={guildSectionActions}
           />
           <Section
             title="Channel"

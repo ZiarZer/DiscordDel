@@ -26,3 +26,22 @@ func Login(authorizationToken string) *User {
 	json.Unmarshal(body, &loggedUser)
 	return &loggedUser
 }
+
+func GetUserGuilds(authorizationToken string) []Guild {
+	resp, err := getUserGuilds(authorizationToken)
+	if err != nil {
+		utils.Log(err.Error(), utils.ERROR)
+		return nil
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		utils.Log(err.Error(), utils.ERROR)
+		return nil
+	}
+	if resp.StatusCode != 200 {
+		utils.Log(string(body), utils.ERROR)
+	}
+	var guilds []Guild
+	json.Unmarshal(body, &guilds)
+	return guilds
+}

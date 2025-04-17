@@ -26,8 +26,16 @@ func login(authorizationToken string) (*http.Response, error) {
 	return request("GET", "users/@me", authorizationToken)
 }
 
+func getUserGuilds(authorizationToken string) (*http.Response, error) {
+	return request("GET", "users/@me/guilds", authorizationToken)
+}
+
 func getGuildById(guildId string, authorizationToken string) (*http.Response, error) {
 	return request("GET", fmt.Sprintf("guilds/%s", guildId), authorizationToken)
+}
+
+func getGuildChannels(guildId string, authorizationToken string) (*http.Response, error) {
+	return request("GET", fmt.Sprintf("guilds/%s/channels", guildId), authorizationToken)
 }
 
 func getChannelById(channelId string, authorizationToken string) (*http.Response, error) {

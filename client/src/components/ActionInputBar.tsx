@@ -11,6 +11,7 @@ const Button = styled(BaseButton)`
 const Input = styled(BaseInput)`
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+  flex: 1;
 `;
 
 const Label = styled.label`

@@ -1,17 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import styled from 'styled-components';
 
 import { version } from '../package.json';
+import { PaginatedList } from './components/PaginatedList';
 import { Section } from './components/Section';
 import { CHANNEL_TYPES } from './constants';
 
 const Wrapper = styled.div`
   display: flex;
+  gap: 1em;
+`;
+
+const LeftPanel = styled.div`
+  display: flex;
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  padding: 1em;
+  margin: auto 1em;
   gap: 1em;
   width: fit-content;
 `;
@@ -93,12 +99,18 @@ function App() {
       setLoadedGuild(lastJsonMessage.body);
     } else if (lastJsonMessage?.type === 'GET_CHANNEL') {
       setLoadedChannel(lastJsonMessage.body);
+    } else if (
+      lastJsonMessage?.type === 'GET_USER_GUILDS' ||
+      lastJsonMessage?.type === 'GET_GUILD_CHANNELS'
+    ) {
+      setResultsList(lastJsonMessage.body);
     }
   }, [lastJsonMessage, lastMessage]);
 
   const [authorizationToken, setAuthorizationToken] = useState('');
   const [inputGuildId, setInputGuildId] = useState('');
   const [inputChannelId, setInputChannelId] = useState('');
+  const [resultsList, setResultsList] = useState(null);
 
   const sendLoginRequest = useCallback(
     () =>
@@ -125,53 +137,72 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, inputChannelId],
   );
+  const sendGetUserGuildsRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'GET_USER_GUILDS',
+        body: { authorizationToken },
+      }),
+    [sendJsonMessage, authorizationToken]
+  );
+  const sendGetGuildChannelsRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'GET_GUILD_CHANNELS',
+        body: { authorizationToken, guildId: inputGuildId },
+      }),
+    [sendJsonMessage, authorizationToken, inputGuildId]
+  );
 
   return (
     <>
       <Wrapper>
-        <Section
-          title="User"
-          actionInputBar={{
-            inputPlaceholder: 'Authorization token',
-            buttonLabel: 'Authenticate',
-            enabled: true,
-            secret: true,
-            onSubmit: sendLoginRequest,
-            onChange: (e: ChangeEvent) => setAuthorizationToken(e.target.value),
-          }}
-          statusMessage={userStatusMessage}
-          currentObject={currentUser}
-          infoFields={userSectionInfoFields}
-          getAvatarUrl={getUserAvatarUrl}
-        />
-        <Section
-          title="Guild"
-          actionInputBar={{
-            inputPlaceholder: 'Guild ID',
-            buttonLabel: 'Load guild by ID',
-            enabled: currentUser != null,
-            onSubmit: sendGetGuildRequest,
-            onChange: (e: ChangeEvent) => setInputGuildId(e.target.value),
-          }}
-          statusMessage={guildStatusMessage}
-          currentObject={loadedGuild}
-          infoFields={guildSectionInfoFields}
-          getAvatarUrl={getGuildIconUrl}
-        />
-        <Section
-          title="Channel"
-          actionInputBar={{
-            inputPlaceholder: 'Channel ID',
-            buttonLabel: 'Load channel by ID',
-            enabled: currentUser != null,
-            onSubmit: sendGetChannelRequest,
-            onChange: (e: ChangeEvent) => setInputChannelId(e.target.value),
-          }}
-          statusMessage={channelStatusMessage}
-          currentObject={loadedChannel}
-          infoFields={channelSectionInfoFields}
-          getAvatarUrl={() => null}
-        />
+        <LeftPanel>
+          <Section
+            title="User"
+            actionInputBar={{
+              inputPlaceholder: 'Authorization token',
+              buttonLabel: 'Authenticate',
+              enabled: true,
+              secret: true,
+              onSubmit: sendLoginRequest,
+              onChange: (e: ChangeEvent) => setAuthorizationToken(e.target.value),
+            }}
+            statusMessage={userStatusMessage}
+            currentObject={currentUser}
+            infoFields={userSectionInfoFields}
+            getAvatarUrl={getUserAvatarUrl}
+          />
+          <Section
+            title="Guild"
+            actionInputBar={{
+              inputPlaceholder: 'Guild ID',
+              buttonLabel: 'Load guild by ID',
+              enabled: currentUser != null,
+              onSubmit: sendGetGuildRequest,
+              onChange: (e: ChangeEvent) => setInputGuildId(e.target.value),
+            }}
+            statusMessage={guildStatusMessage}
+            currentObject={loadedGuild}
+            infoFields={guildSectionInfoFields}
+            getAvatarUrl={getGuildIconUrl}
+          />
+          <Section
+            title="Channel"
+            actionInputBar={{
+              inputPlaceholder: 'Channel ID',
+              buttonLabel: 'Load channel by ID',
+              enabled: currentUser != null,
+              onSubmit: sendGetChannelRequest,
+              onChange: (e: ChangeEvent) => setInputChannelId(e.target.value),
+            }}
+            statusMessage={channelStatusMessage}
+            currentObject={loadedChannel}
+            infoFields={channelSectionInfoFields}
+            getAvatarUrl={() => null}
+          />
+        </LeftPanel>
+        <PaginatedList resultsList={resultsList} />
       </Wrapper>
       <Version>{version}</Version>
     </>

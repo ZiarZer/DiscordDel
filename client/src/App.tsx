@@ -6,6 +6,7 @@ import { version } from '../package.json';
 import { PaginatedList } from './components/PaginatedList';
 import { Section } from './components/Section';
 import { CHANNEL_TYPES } from './constants';
+import { Channel, Guild, InfoListFieldConfig, User } from './types';
 
 const Wrapper = styled.div`
   display: flex;
@@ -30,45 +31,51 @@ const Version = styled.p`
 
 const WEBSOCKET_URL = 'ws://127.0.0.1:8765';
 
-const userSectionInfoFields = [
+const userSectionInfoFields: Array<InfoListFieldConfig<User>> = [
   { label: 'ID', fieldName: 'id' },
   { label: 'Display name', fieldName: 'global_name' },
 ];
-const guildSectionInfoFields = [{ label: 'ID', fieldName: 'id' }];
-const channelSectionInfoFields = [
+const guildSectionInfoFields: Array<InfoListFieldConfig<Guild>> = [
+  { label: 'ID', fieldName: 'id' },
+];
+const channelSectionInfoFields: Array<InfoListFieldConfig<Channel>> = [
   { label: "ID", fieldName: "id" },
   { label: "Last message ID", fieldName: "last_message_id" },
   {
     label: "Type",
     fieldName: "type",
-    display: (v: keyof typeof CHANNEL_TYPES) => CHANNEL_TYPES[v],
+    display: (v?: number | string) => CHANNEL_TYPES[v as keyof typeof CHANNEL_TYPES],
   },
   { label: "Parent ID", fieldName: "parent_id" },
   { label: "Guild ID", fieldName: "guild_id" },
   { label: "Message count", fieldName: "message_count" },
 ];
 
-const displayUsername = (user: User|null) =>
+const displayUsername = (user: User | null) =>
   user?.discriminator === '0' ? `@${user?.username}` : `${user?.username}#${user?.discriminator}`;
 
-const getUserAvatarUrl = (user: User) =>
-  `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
-const getGuildIconUrl = (guild: Guild) =>
-  `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+const getUserAvatarUrl = (user: User | null) =>
+  user
+    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+    : undefined;
+const getGuildIconUrl = (guild: Guild | null) =>
+  guild
+    ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
+    : undefined;
 
 function App() {
   const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(WEBSOCKET_URL, {
     share: false,
     shouldReconnect: () => true,
   }) as {
-    sendJsonMessage: any
-    lastMessage: any
-    lastJsonMessage: null | { body: object; type: string }
+    sendJsonMessage: (message: object) => void;
+    lastMessage: object;
+    lastJsonMessage: null | { body: object; type: string };
   };
 
-  const [currentUser, setCurrentUser] = useState<User>(null);
-  const [loadedGuild, setLoadedGuild] = useState<Guild>(null);
-  const [loadedChannel, setLoadedChannel] = useState<Channel>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loadedGuild, setLoadedGuild] = useState<Guild | null>(null);
+  const [loadedChannel, setLoadedChannel] = useState<Channel | null>(null);
 
   const userStatusMessage = useMemo(
     () =>
@@ -94,23 +101,23 @@ function App() {
 
   useEffect(() => {
     if (lastJsonMessage?.type === 'LOGIN') {
-      setCurrentUser(lastJsonMessage.body);
+      setCurrentUser(lastJsonMessage.body as User);
     } else if (lastJsonMessage?.type === 'GET_GUILD') {
-      setLoadedGuild(lastJsonMessage.body);
+      setLoadedGuild(lastJsonMessage.body as Guild);
     } else if (lastJsonMessage?.type === 'GET_CHANNEL') {
-      setLoadedChannel(lastJsonMessage.body);
+      setLoadedChannel(lastJsonMessage.body as Channel);
     } else if (
       lastJsonMessage?.type === 'GET_USER_GUILDS' ||
       lastJsonMessage?.type === 'GET_GUILD_CHANNELS'
     ) {
-      setResultsList(lastJsonMessage.body);
+      setResultsList(lastJsonMessage.body as Array<Guild> | Array<Channel>);
     }
   }, [lastJsonMessage, lastMessage]);
 
   const [authorizationToken, setAuthorizationToken] = useState('');
   const [inputGuildId, setInputGuildId] = useState('');
   const [inputChannelId, setInputChannelId] = useState('');
-  const [resultsList, setResultsList] = useState(null);
+  const [resultsList, setResultsList] = useState<Array<Guild> | Array<Channel> | null>(null);
 
   const sendLoginRequest = useCallback(
     () =>
@@ -171,7 +178,7 @@ function App() {
               enabled: true,
               secret: true,
               onSubmit: sendLoginRequest,
-              onChange: (e: ChangeEvent) => setAuthorizationToken(e.target.value),
+              onChange: (e: ChangeEvent) => setAuthorizationToken((e.target as HTMLInputElement).value),
             }}
             statusMessage={userStatusMessage}
             currentObject={currentUser}
@@ -186,7 +193,7 @@ function App() {
               buttonLabel: 'Load guild by ID',
               enabled: currentUser != null,
               onSubmit: sendGetGuildRequest,
-              onChange: (e: ChangeEvent) => setInputGuildId(e.target.value),
+              onChange: (e: ChangeEvent) => setInputGuildId((e.target as HTMLInputElement).value),
             }}
             statusMessage={guildStatusMessage}
             currentObject={loadedGuild}
@@ -201,12 +208,11 @@ function App() {
               buttonLabel: 'Load channel by ID',
               enabled: currentUser != null,
               onSubmit: sendGetChannelRequest,
-              onChange: (e: ChangeEvent) => setInputChannelId(e.target.value),
+              onChange: (e: ChangeEvent) => setInputChannelId((e.target as HTMLInputElement).value),
             }}
             statusMessage={channelStatusMessage}
             currentObject={loadedChannel}
             infoFields={channelSectionInfoFields}
-            getAvatarUrl={() => null}
           />
         </LeftPanel>
         <PaginatedList resultsList={resultsList} />

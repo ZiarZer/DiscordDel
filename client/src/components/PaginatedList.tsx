@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 
 import { Button } from '.';
+import { Channel, Guild } from '../types';
 
 const Wrapper = styled.div`
   background-color: #ffffff30;
@@ -38,7 +39,7 @@ const Header = styled.div`
 const PAGE_SIZE = 20;
 
 type PaginatedListProps = {
-  resultsList?: Array<object>;
+  resultsList?: Array<Guild> | Array<Channel> | null;
 };
 
 export function PaginatedList({ resultsList }: PaginatedListProps) {
@@ -83,7 +84,7 @@ export function PaginatedList({ resultsList }: PaginatedListProps) {
         </PageNav>
       </Header>
       <Ul>
-        {displayedResults?.map((el) => (
+        {displayedResults?.map((el: Guild | Channel) => (
           <li>{el.name}</li>
         ))}
       </Ul>

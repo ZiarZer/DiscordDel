@@ -4,6 +4,8 @@ import { ActionInputBar } from "./ActionInputBar";
 import { StatusMessage } from "./StatusMessage";
 import { InfoList } from "./InfoList";
 import { Button } from ".";
+import { Channel, Guild, InfoListFieldConfig, User } from "../types";
+import { ChangeEvent } from "react";
 
 const Wrapper = styled.div`
   background-color: #ffffff30;
@@ -25,7 +27,24 @@ const ActionsContainer = styled.div`
   justify-content: space-evenly;
 `;
 
-export function Section({
+type SectionProps<T extends User | Guild | Channel> = {
+  title: string;
+  actionInputBar: {
+    inputPlaceholder: string;
+    buttonLabel: string;
+    enabled?: boolean;
+    secret?: boolean;
+    onSubmit: () => void;
+    onChange: (e: ChangeEvent) => void;
+  };
+  statusMessage: string;
+  currentObject: T | null;
+  infoFields: Array<InfoListFieldConfig<T>>;
+  getAvatarUrl?: (param: T) => string | undefined;
+  actions?: Array<{ label: string; onClick: () => void }>;
+};
+
+export function Section<T extends User | Guild | Channel>({
   title,
   actionInputBar: {
     inputPlaceholder,
@@ -38,9 +57,9 @@ export function Section({
   statusMessage,
   currentObject,
   infoFields,
-  getAvatarUrl,
+  getAvatarUrl = () => undefined,
   actions = [],
-}) {
+}: SectionProps<T>) {
   return (
     <Wrapper>
       <SectionTitle>{title}</SectionTitle>
@@ -54,7 +73,9 @@ export function Section({
       />
       <StatusMessage message={statusMessage} success={currentObject != null} />
       <InfoList
-        currentObject={currentObject}
+        currentObject={
+          currentObject as Record<keyof T, string | number | undefined>
+        }
         fields={infoFields}
         getAvatarUrl={getAvatarUrl}
       />

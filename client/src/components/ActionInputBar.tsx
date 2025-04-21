@@ -23,6 +23,15 @@ const Wrapper = styled.div`
   align-items: stretch;
 `;
 
+type ActionInputBarProps = {
+  inputPlaceholder: string;
+  buttonText: string;
+  enabled?: boolean;
+  secret?: boolean;
+  onSubmit: () => void;
+  onChange: (e: ChangeEvent) => void;
+};
+
 export function ActionInputBar({
   inputPlaceholder,
   buttonText,
@@ -30,14 +39,7 @@ export function ActionInputBar({
   secret = false,
   onSubmit,
   onChange = () => {},
-}: {
-  inputPlaceholder: string
-  buttonText: string
-  enabled?: boolean
-  secret?: boolean
-  onSubmit: () => void
-  onChange: () => void
-}) {
+}: ActionInputBarProps) {
   const [showSecret, setShowSecret] = useState(!secret);
   const inputRef = useRef<HTMLInputElement>(null);
   const id = `display-checkbox-${Math.floor(Math.random() * 10)}`;

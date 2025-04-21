@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 
-
 export function StatusMessage({
   message,
   success = false,
@@ -10,9 +9,13 @@ export function StatusMessage({
 }) {
   return (
     <div>
-    {success ? <span style={{ color: "green" }}>&#x2714;</span>:<span>&#x274C;</span>}
-        &nbsp;
-        {message}
+      {success ? (
+        <span style={{ color: "green" }}>&#x2714;</span>
+      ) : (
+        <span>&#x274C;</span>
+      )}
+      &nbsp;
+      {message}
     </div>
   );
 }

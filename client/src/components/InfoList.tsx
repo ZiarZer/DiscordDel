@@ -37,10 +37,12 @@ export function InfoList<T extends User | Guild | Channel>({
   fields: Array<InfoListFieldConfig<T>>;
   getAvatarUrl: (param: T) => string | undefined;
 }) {
-  const defaultDisplay = useCallback((value?: string | number, isId = false) => {
-    return isId ? <Snowflake snowflakeId={value} /> : 
-    (value ?? '---')
-  }, []);
+  const defaultDisplay = useCallback(
+    (value?: string | number, isId = false) => {
+      return isId ? <Snowflake snowflakeId={value} /> : value ?? '---';
+    },
+    []
+  );
 
   return (
     <Wrapper>

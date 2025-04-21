@@ -44,7 +44,8 @@ const channelSectionInfoFields: Array<InfoListFieldConfig<Channel>> = [
   {
     label: "Type",
     fieldName: "type",
-    display: (v?: number | string) => CHANNEL_TYPES[v as keyof typeof CHANNEL_TYPES],
+    display: (v?: number | string) =>
+      CHANNEL_TYPES[v as keyof typeof CHANNEL_TYPES],
   },
   { label: "Parent ID", fieldName: "parent_id" },
   { label: "Guild ID", fieldName: "guild_id" },
@@ -52,7 +53,9 @@ const channelSectionInfoFields: Array<InfoListFieldConfig<Channel>> = [
 ];
 
 const displayUsername = (user: User | null) =>
-  user?.discriminator === '0' ? `@${user?.username}` : `${user?.username}#${user?.discriminator}`;
+  user?.discriminator === '0'
+    ? `@${user?.username}`
+    : `${user?.username}#${user?.discriminator}`;
 
 const getUserAvatarUrl = (user: User | null) =>
   user
@@ -64,10 +67,13 @@ const getGuildIconUrl = (guild: Guild | null) =>
     : undefined;
 
 function App() {
-  const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(WEBSOCKET_URL, {
-    share: false,
-    shouldReconnect: () => true,
-  }) as {
+  const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(
+    WEBSOCKET_URL,
+    {
+      share: false,
+      shouldReconnect: () => true,
+    }
+  ) as {
     sendJsonMessage: (message: object) => void;
     lastMessage: object;
     lastJsonMessage: null | { body: object; type: string };
@@ -117,7 +123,9 @@ function App() {
   const [authorizationToken, setAuthorizationToken] = useState('');
   const [inputGuildId, setInputGuildId] = useState('');
   const [inputChannelId, setInputChannelId] = useState('');
-  const [resultsList, setResultsList] = useState<Array<Guild> | Array<Channel> | null>(null);
+  const [resultsList, setResultsList] = useState<
+    Array<Guild> | Array<Channel> | null
+  >(null);
 
   const sendLoginRequest = useCallback(
     () =>
@@ -161,7 +169,9 @@ function App() {
     [sendJsonMessage, authorizationToken, inputGuildId]
   );
 
-  const userSectionActions = [{ label: 'Get user guilds', onClick: sendGetUserGuildsRequest }];
+  const userSectionActions = [
+    { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
+  ];
   const guildSectionActions = [
     { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
   ];
@@ -178,7 +188,8 @@ function App() {
               enabled: true,
               secret: true,
               onSubmit: sendLoginRequest,
-              onChange: (e: ChangeEvent) => setAuthorizationToken((e.target as HTMLInputElement).value),
+              onChange: (e: ChangeEvent) =>
+                setAuthorizationToken((e.target as HTMLInputElement).value),
             }}
             statusMessage={userStatusMessage}
             currentObject={currentUser}
@@ -193,7 +204,8 @@ function App() {
               buttonLabel: 'Load guild by ID',
               enabled: currentUser != null,
               onSubmit: sendGetGuildRequest,
-              onChange: (e: ChangeEvent) => setInputGuildId((e.target as HTMLInputElement).value),
+              onChange: (e: ChangeEvent) =>
+                setInputGuildId((e.target as HTMLInputElement).value),
             }}
             statusMessage={guildStatusMessage}
             currentObject={loadedGuild}
@@ -208,7 +220,8 @@ function App() {
               buttonLabel: 'Load channel by ID',
               enabled: currentUser != null,
               onSubmit: sendGetChannelRequest,
-              onChange: (e: ChangeEvent) => setInputChannelId((e.target as HTMLInputElement).value),
+              onChange: (e: ChangeEvent) =>
+                setInputChannelId((e.target as HTMLInputElement).value),
             }}
             statusMessage={channelStatusMessage}
             currentObject={loadedChannel}

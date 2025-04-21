@@ -24,7 +24,7 @@ const PageNav = styled.div`
 `;
 
 const Ul = styled.ul`
-text-align: left;
+  text-align: left;
 `;
 
 const SectionTitle = styled.h3`
@@ -50,7 +50,10 @@ export function PaginatedList({ resultsList }: PaginatedListProps) {
     [resultsList]
   );
   const hasPrevious = useMemo(() => page > 0, [page]);
-  const hasNext = useMemo(() => pageCount && page + 1 < pageCount, [page, pageCount]);
+  const hasNext = useMemo(
+    () => pageCount && page + 1 < pageCount,
+    [page, pageCount]
+  );
   const nextPage = () => {
     if (hasNext) {
       setPage(page + 1);

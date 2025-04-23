@@ -36,6 +36,6 @@ func getLogTag(logLevel *LogLevel) string {
 	return colorText(fmt.Sprintf("[%s]", colorText(cJust(logLevel.Name, 7, " "), logLevel.BashColorCode)), "1")
 }
 
-func Log(message string, logLevel *LogLevel) {
+func InternalLog(message string, logLevel *LogLevel) {
 	fmt.Printf("%s %s\n", getLogTag(logLevel), message)
 }

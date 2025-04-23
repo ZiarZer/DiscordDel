@@ -7,9 +7,9 @@ import (
 	"github.com/ZiarZer/DiscordDel/wsserver"
 )
 
-const Version = "0.2.0"
+const Version = "0.3.0"
 
 func main() {
-	utils.Log(fmt.Sprintf("DiscordDel - v%s", Version), nil)
+	utils.InternalLog(fmt.Sprintf("DiscordDel - v%s", Version), nil)
 	wsserver.RunWebSocketServer("/", 8765)
 }

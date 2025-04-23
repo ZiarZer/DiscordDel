@@ -24,12 +24,12 @@ func SendMessageToClient(conn *websocket.Conn, messageType string, messageBody [
 	response := newMessage(messageType, messageBody)
 	stringResponse, err := json.Marshal(response)
 	if err != nil {
-		utils.Log(fmt.Sprintf("Failed to serialize %s response", messageType), utils.FATAL)
+		utils.InternalLog(fmt.Sprintf("Failed to serialize %s response", messageType), utils.FATAL)
 		return err
 	}
 	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
 	if err != nil {
-		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
+		utils.InternalLog("Failed to send WebSocket message to client", utils.FATAL)
 		return err
 	}
 	return nil

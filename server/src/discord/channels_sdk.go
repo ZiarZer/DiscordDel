@@ -2,6 +2,7 @@ package discord
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/ZiarZer/DiscordDel/utils"
@@ -24,5 +25,6 @@ func (sdk *DiscordSdk) GetChannel(channelId string, authorizationToken string) *
 	}
 	var channel Channel
 	json.Unmarshal(body, &channel)
+	sdk.Log(fmt.Sprintf("Successfully got channel %s (#%s)", channel.Name, channelId), utils.SUCCESS)
 	return &channel
 }

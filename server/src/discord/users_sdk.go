@@ -2,6 +2,7 @@ package discord
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/ZiarZer/DiscordDel/utils"
@@ -24,6 +25,7 @@ func (sdk *DiscordSdk) Login(authorizationToken string) *User {
 	}
 	var loggedUser User
 	json.Unmarshal(body, &loggedUser)
+	sdk.Log(fmt.Sprintf("Successfully authenticated as %s (%s)", loggedUser.Username, loggedUser.Id), utils.SUCCESS)
 	return &loggedUser
 }
 
@@ -43,5 +45,6 @@ func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []Guild {
 	}
 	var guilds []Guild
 	json.Unmarshal(body, &guilds)
+	sdk.Log(fmt.Sprintf("Successfully got %d guilds for current user", len(guilds)), utils.SUCCESS)
 	return guilds
 }

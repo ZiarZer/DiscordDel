@@ -1,24 +1,13 @@
-package websocket
+package wsserver
 
 import (
 	"encoding/json"
 
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/utils"
+	"github.com/ZiarZer/DiscordDel/wsbase"
 	"github.com/gorilla/websocket"
 )
-
-type Message struct {
-	Type string          `json:"type"`
-	Body json.RawMessage `json:"body"`
-}
-
-func newMessage(Type string, jsonBytes []byte) Message {
-	return Message{
-		Type: Type,
-		Body: json.RawMessage(jsonBytes),
-	}
-}
 
 type RequestBody interface {
 	handle(conn *websocket.Conn) error
@@ -62,7 +51,7 @@ func handleMessage(conn *websocket.Conn) error {
 		return err
 	}
 
-	var message Message
+	var message wsbase.Message
 	err = json.Unmarshal(stringMessage, &message)
 	if err != nil {
 		utils.Log("Failed to parse WebSocket message from client", utils.FATAL)
@@ -86,18 +75,7 @@ func (body *LoginRequestBody) handle(conn *websocket.Conn) error {
 		utils.Log("Failed to serialize user info", utils.ERROR)
 		return err
 	}
-	response := newMessage("LOGIN", jsonUser)
-	stringResponse, err := json.Marshal(response)
-	if err != nil {
-		utils.Log("Failed to serialize LOGIN response", utils.FATAL)
-		return err
-	}
-	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
-	if err != nil {
-		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
-		return err
-	}
-	return nil
+	return wsbase.SendMessageToClient(conn, "LOGIN", jsonUser)
 }
 
 func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
@@ -107,18 +85,7 @@ func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
 		utils.Log("Failed to serialize guild info", utils.ERROR)
 		return err
 	}
-	response := newMessage("GET_GUILD", jsonGuild)
-	stringResponse, err := json.Marshal(response)
-	if err != nil {
-		utils.Log("Failed to serialize GET_GUILD response", utils.FATAL)
-		return err
-	}
-	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
-	if err != nil {
-		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
-		return err
-	}
-	return nil
+	return wsbase.SendMessageToClient(conn, "GET_GUILD", jsonGuild)
 }
 
 func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
@@ -128,18 +95,7 @@ func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
 		utils.Log("Failed to serialize channel info", utils.ERROR)
 		return err
 	}
-	response := newMessage("GET_CHANNEL", jsonChannel)
-	stringResponse, err := json.Marshal(response)
-	if err != nil {
-		utils.Log("Failed to serialize GET_CHANNEL response", utils.FATAL)
-		return err
-	}
-	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
-	if err != nil {
-		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
-		return err
-	}
-	return nil
+	return wsbase.SendMessageToClient(conn, "GET_CHANNEL", jsonChannel)
 }
 
 func (body *GetUserGuildsRequestBody) handle(conn *websocket.Conn) error {
@@ -149,18 +105,7 @@ func (body *GetUserGuildsRequestBody) handle(conn *websocket.Conn) error {
 		utils.Log("Failed to serialize guilds list", utils.ERROR)
 		return err
 	}
-	response := newMessage("GET_USER_GUILDS", jsonGuildList)
-	stringResponse, err := json.Marshal(response)
-	if err != nil {
-		utils.Log("Failed to serialize GET_USER_GUILDS response", utils.FATAL)
-		return err
-	}
-	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
-	if err != nil {
-		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
-		return err
-	}
-	return nil
+	return wsbase.SendMessageToClient(conn, "GET_USER_GUILDS", jsonGuildList)
 }
 
 func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
@@ -170,16 +115,5 @@ func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
 		utils.Log("Failed to serialize channels list", utils.ERROR)
 		return err
 	}
-	response := newMessage("GET_GUILD_CHANNELS", jsonChannelList)
-	stringResponse, err := json.Marshal(response)
-	if err != nil {
-		utils.Log("Failed to serialize GET_GUILD_CHANNELS response", utils.FATAL)
-		return err
-	}
-	err = conn.WriteMessage(websocket.TextMessage, stringResponse)
-	if err != nil {
-		utils.Log("Failed to send WebSocket message to client", utils.FATAL)
-		return err
-	}
-	return nil
+	return wsbase.SendMessageToClient(conn, "GET_GUILD_CHANNELS", jsonChannelList)
 }

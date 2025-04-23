@@ -175,9 +175,9 @@ function App() {
     () =>
       sendJsonMessage({
         type: 'GET_GUILD_CHANNELS',
-        body: { authorizationToken, guildId: inputGuildId },
+        body: { authorizationToken, guildId: loadedGuild?.id },
       }),
-    [sendJsonMessage, authorizationToken, inputGuildId]
+    [sendJsonMessage, authorizationToken, loadedGuild]
   );
 
   const userSectionActions = [

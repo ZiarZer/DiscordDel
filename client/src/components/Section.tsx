@@ -81,7 +81,7 @@ export function Section<T extends User | Guild | Channel>({
       />
       <ActionsContainer>
         {actions.map(({ label, onClick }) => (
-          <Button onClick={onClick}>{label}</Button>
+          <Button disabled={currentObject == null} onClick={onClick}>{label}</Button>
         ))}
       </ActionsContainer>
     </Wrapper>

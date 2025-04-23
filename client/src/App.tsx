@@ -3,10 +3,11 @@ import useWebSocket from 'react-use-websocket';
 import styled from 'styled-components';
 
 import { version } from '../package.json';
+import { Console } from './components/Console';
 import { PaginatedList } from './components/PaginatedList';
 import { Section } from './components/Section';
 import { CHANNEL_TYPES } from './constants';
-import { Channel, Guild, InfoListFieldConfig, User } from './types';
+import { Channel, Guild, InfoListFieldConfig, LogEntry, User } from './types';
 
 const Wrapper = styled.div`
   display: flex;
@@ -105,6 +106,15 @@ function App() {
     [loadedChannel]
   );
 
+  const [logs, setLogs] = useState<Array<LogEntry>>([]);
+  const addLog = useCallback(({ logLevel, message }: LogEntry) => {
+    setLogs((currentLogs) =>
+      currentLogs.length >= 50
+        ? currentLogs.slice(1).concat([{ logLevel, message }])
+        : [...currentLogs, { logLevel, message }]
+    );
+  }, []);
+
   useEffect(() => {
     if (lastJsonMessage?.type === 'LOGIN') {
       setCurrentUser(lastJsonMessage.body as User);
@@ -117,8 +127,10 @@ function App() {
       lastJsonMessage?.type === 'GET_GUILD_CHANNELS'
     ) {
       setResultsList(lastJsonMessage.body as Array<Guild> | Array<Channel>);
+    } else if (lastJsonMessage?.type === 'LOG') {
+      addLog(lastJsonMessage.body as LogEntry);
     }
-  }, [lastJsonMessage, lastMessage]);
+  }, [lastJsonMessage, lastMessage, addLog]);
 
   const [authorizationToken, setAuthorizationToken] = useState('');
   const [inputGuildId, setInputGuildId] = useState('');
@@ -229,6 +241,7 @@ function App() {
           />
         </LeftPanel>
         <PaginatedList resultsList={resultsList} />
+        <Console logs={logs} />
       </Wrapper>
       <Version>{version}</Version>
     </>

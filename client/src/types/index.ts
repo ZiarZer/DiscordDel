@@ -29,3 +29,17 @@ export type InfoListFieldConfig<T extends User | Guild | Channel> = {
   label: string;
   display?: (value?: string | number, isId?: boolean) => string | ReactElement
 }
+
+export enum LogLevel {
+  DEBUG = 'DEBUG',
+  INFO = 'INFO',
+  SUCCESS = 'SUCCESS',
+  WARNING = 'WARNING',
+  ERROR = 'ERROR',
+  FATAL = 'FATAL',
+}
+
+export type LogEntry = {
+  message: string;
+  logLevel?: LogLevel | null;
+};

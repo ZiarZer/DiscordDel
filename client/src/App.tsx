@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import useWebSocket from 'react-use-websocket';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 import styled from 'styled-components';
 
 import { version } from '../package.json';
@@ -68,17 +68,16 @@ const getGuildIconUrl = (guild: Guild | null) =>
     : undefined;
 
 function App() {
-  const { sendJsonMessage, lastMessage, lastJsonMessage } = useWebSocket(
-    WEBSOCKET_URL,
-    {
+  const { sendJsonMessage, lastMessage, lastJsonMessage, readyState } =
+    useWebSocket(WEBSOCKET_URL, {
       share: false,
       shouldReconnect: () => true,
-    }
-  ) as {
-    sendJsonMessage: (message: object) => void;
-    lastMessage: object;
-    lastJsonMessage: null | { body: object; type: string };
-  };
+    }) as {
+      sendJsonMessage: (message: object) => void;
+      lastMessage: object;
+      lastJsonMessage: null | { body: object; type: string };
+      readyState: ReadyState;
+    };
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loadedGuild, setLoadedGuild] = useState<Guild | null>(null);
@@ -197,7 +196,7 @@ function App() {
             actionInputBar={{
               inputPlaceholder: 'Authorization token',
               buttonLabel: 'Authenticate',
-              enabled: true,
+              enabled: readyState === ReadyState.OPEN,
               secret: true,
               onSubmit: sendLoginRequest,
               onChange: (e: ChangeEvent) =>

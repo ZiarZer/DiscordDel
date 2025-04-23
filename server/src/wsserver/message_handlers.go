@@ -3,7 +3,6 @@ package wsserver
 import (
 	"encoding/json"
 
-	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/ZiarZer/DiscordDel/wsbase"
 	"github.com/gorilla/websocket"
@@ -69,7 +68,7 @@ func handleMessage(conn *websocket.Conn) error {
 }
 
 func (body *LoginRequestBody) handle(conn *websocket.Conn) error {
-	user := discord.Login(body.AuthorizationToken)
+	user := sdk.Login(body.AuthorizationToken)
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
 		utils.Log("Failed to serialize user info", utils.ERROR)
@@ -79,7 +78,7 @@ func (body *LoginRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
-	guild := discord.GetGuild(body.GuildId, body.AuthorizationToken)
+	guild := sdk.GetGuild(body.GuildId, body.AuthorizationToken)
 	jsonGuild, err := json.Marshal(guild)
 	if err != nil {
 		utils.Log("Failed to serialize guild info", utils.ERROR)
@@ -89,7 +88,7 @@ func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
-	channel := discord.GetChannel(body.ChannelId, body.AuthorizationToken)
+	channel := sdk.GetChannel(body.ChannelId, body.AuthorizationToken)
 	jsonChannel, err := json.Marshal(channel)
 	if err != nil {
 		utils.Log("Failed to serialize channel info", utils.ERROR)
@@ -99,7 +98,7 @@ func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *GetUserGuildsRequestBody) handle(conn *websocket.Conn) error {
-	guilds := discord.GetUserGuilds(body.AuthorizationToken)
+	guilds := sdk.GetUserGuilds(body.AuthorizationToken)
 	jsonGuildList, err := json.Marshal(guilds)
 	if err != nil {
 		utils.Log("Failed to serialize guilds list", utils.ERROR)
@@ -109,7 +108,7 @@ func (body *GetUserGuildsRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
-	channels := discord.GetGuildChannels(body.GuildId, body.AuthorizationToken)
+	channels := sdk.GetGuildChannels(body.GuildId, body.AuthorizationToken)
 	jsonChannelList, err := json.Marshal(channels)
 	if err != nil {
 		utils.Log("Failed to serialize channels list", utils.ERROR)

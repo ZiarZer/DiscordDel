@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/gorilla/websocket"
 )
@@ -31,8 +32,11 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var sdk discord.DiscordSdk
+
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
+	sdk = discord.DiscordSdk{}
 	utils.Log(fmt.Sprintf("Websocket server started: ws://localhost:%d", port), utils.INFO)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

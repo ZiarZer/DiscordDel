@@ -7,7 +7,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func GetChannel(channelId string, authorizationToken string) *Channel {
+func (sdk *DiscordSdk) GetChannel(channelId string, authorizationToken string) *Channel {
 	resp, err := getChannelById(channelId, authorizationToken)
 	if err != nil {
 		utils.Log(err.Error(), utils.ERROR)

@@ -7,7 +7,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func GetGuild(guildId string, authorizationToken string) *Guild {
+func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *Guild {
 	resp, err := getGuildById(guildId, authorizationToken)
 	if err != nil {
 		utils.Log(err.Error(), utils.ERROR)
@@ -27,7 +27,7 @@ func GetGuild(guildId string, authorizationToken string) *Guild {
 	return &guild
 }
 
-func GetGuildChannels(guildId string, authorizationToken string) []Channel {
+func (sdk *DiscordSdk) GetGuildChannels(guildId string, authorizationToken string) []Channel {
 	resp, err := getGuildChannels(guildId, authorizationToken)
 	if err != nil {
 		utils.Log(err.Error(), utils.ERROR)

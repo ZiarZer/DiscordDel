@@ -7,7 +7,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func Login(authorizationToken string) *User {
+func (sdk *DiscordSdk) Login(authorizationToken string) *User {
 	resp, err := login(authorizationToken)
 	if err != nil {
 		utils.Log(err.Error(), utils.ERROR)
@@ -27,7 +27,7 @@ func Login(authorizationToken string) *User {
 	return &loggedUser
 }
 
-func GetUserGuilds(authorizationToken string) []Guild {
+func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []Guild {
 	resp, err := getUserGuilds(authorizationToken)
 	if err != nil {
 		utils.Log(err.Error(), utils.ERROR)

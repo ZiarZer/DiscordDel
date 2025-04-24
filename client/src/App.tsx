@@ -22,6 +22,7 @@ const LeftPanel = styled.div`
   margin: auto 1em;
   gap: 1em;
   width: fit-content;
+  width: 33%;
 `;
 
 const Version = styled.p`
@@ -126,6 +127,7 @@ function App() {
       lastJsonMessage?.type === 'GET_GUILD_CHANNELS'
     ) {
       setResultsList(lastJsonMessage.body as Array<Guild> | Array<Channel>);
+      setIsChannelType(lastJsonMessage.type === 'GET_GUILD_CHANNELS');
     } else if (lastJsonMessage?.type === 'LOG') {
       addLog(lastJsonMessage.body as LogEntry);
     }
@@ -137,6 +139,7 @@ function App() {
   const [resultsList, setResultsList] = useState<
     Array<Guild> | Array<Channel> | null
   >(null);
+  const [isChannelType, setIsChannelType] = useState(false);
 
   const sendLoginRequest = useCallback(
     () =>
@@ -239,7 +242,10 @@ function App() {
             infoFields={channelSectionInfoFields}
           />
         </LeftPanel>
-        <PaginatedList resultsList={resultsList} />
+        <PaginatedList
+          resultsList={resultsList}
+          isChannelType={isChannelType}
+        />
         <Console logs={logs} />
       </Wrapper>
       <Version>{version}</Version>

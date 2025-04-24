@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import styled from 'styled-components';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import styled, { css } from 'styled-components';
 
 import { Button } from '.';
 import { Channel, Guild } from '../types';
+import CopyIcon from '../assets/copy.svg?react';
+import ExternalLinkIcon from '../assets/external-link.svg?react';
 
 const Wrapper = styled.div`
   background-color: #ffffff30;
@@ -24,7 +26,15 @@ const PageNav = styled.div`
 `;
 
 const Ul = styled.ul`
+  list-style-type: none;
   text-align: left;
+  padding: unset;
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    margin: 0.25em auto;
+  }
 `;
 
 const SectionTitle = styled.h3`
@@ -36,13 +46,39 @@ const Header = styled.div`
   justify-content: space-between;
 `;
 
+const iconContainerStyle = css`
+  display: flex;
+  border-radius: 4px;
+  align-items: center;
+  background-color: #1a1a1a;
+  padding: 0.25em;
+  color: inherit;
+  svg {
+    height: 1em;
+    width: 1em;
+  }
+`;
+
+const IconButton = styled.div`
+  ${iconContainerStyle}
+  cursor: copy;
+`;
+
+const IconLink = styled.a`
+  ${iconContainerStyle}
+`;
+
 const PAGE_SIZE = 20;
 
 type PaginatedListProps = {
   resultsList?: Array<Guild> | Array<Channel> | null;
+  isChannelType?: boolean;
 };
 
-export function PaginatedList({ resultsList }: PaginatedListProps) {
+export function PaginatedList({
+  resultsList,
+  isChannelType = false,
+}: PaginatedListProps) {
   const [page, setPage] = useState(0);
   const pageCount = useMemo(
     () =>
@@ -72,6 +108,17 @@ export function PaginatedList({ resultsList }: PaginatedListProps) {
 
   useEffect(() => setPage(0), [resultsList]);
 
+  const getItemLink = useCallback(
+    (object) => {
+      if (!isChannelType) {
+        return undefined;
+      }
+      const guildPart = object.guild_id ?? '@me';
+      return `https://discord.com/channels/${guildPart}/${object.id}`;
+    },
+    [isChannelType]
+  );
+
   return (
     <Wrapper>
       <SectionTitle>Results</SectionTitle>
@@ -88,7 +135,17 @@ export function PaginatedList({ resultsList }: PaginatedListProps) {
       </Header>
       <Ul>
         {displayedResults?.map((el: Guild | Channel) => (
-          <li>{el.name}</li>
+          <li>
+            <IconButton onClick={() => navigator.clipboard.writeText(el.id)}>
+              <CopyIcon />
+            </IconButton>
+            {isChannelType && (
+              <IconLink href={getItemLink(el)} rel="noreferrer" target="_blank">
+                <ExternalLinkIcon />
+              </IconLink>
+            )}
+            {el.name}
+          </li>
         ))}
       </Ul>
     </Wrapper>

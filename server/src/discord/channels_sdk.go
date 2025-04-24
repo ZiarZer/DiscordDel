@@ -28,3 +28,24 @@ func (sdk *DiscordSdk) GetChannel(channelId string, authorizationToken string) *
 	sdk.Log(fmt.Sprintf("Successfully got channel %s (#%s)", channel.Name, channelId), utils.SUCCESS)
 	return &channel
 }
+
+func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId string, options *GetChannelMessagesOptions) []Message {
+	resp, err := getChannelMessages(channelId, options, authorizationToken)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil
+	}
+	if resp.StatusCode != 200 {
+		sdk.Log(string(body), utils.ERROR)
+		return nil
+	}
+	var messages []Message
+	json.Unmarshal(body, &messages)
+	sdk.Log(fmt.Sprintf("Got %d messages in channel %s", len(messages), channelId), utils.SUCCESS)
+	return messages
+}

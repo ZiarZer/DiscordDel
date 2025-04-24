@@ -35,12 +35,18 @@ type GetChannelRequestBody struct {
 	ChannelId          string `json:"channelId"`
 }
 
+type CrawlChannelRequestBody struct {
+	AuthorizationToken string `json:"authorizationToken"`
+	ChannelId          string `json:"channelId"`
+}
+
 var bodyConstructors = map[string]func() RequestBody{
 	"LOGIN":              func() RequestBody { return &LoginRequestBody{} },
 	"GET_USER_GUILDS":    func() RequestBody { return &GetUserGuildsRequestBody{} },
 	"GET_GUILD":          func() RequestBody { return &GetGuildRequestBody{} },
 	"GET_GUILD_CHANNELS": func() RequestBody { return &GetGuildChannelsRequestBody{} },
 	"GET_CHANNEL":        func() RequestBody { return &GetChannelRequestBody{} },
+	"CRAWL_CHANNEL":      func() RequestBody { return &CrawlChannelRequestBody{} },
 }
 
 func handleMessage(conn *websocket.Conn) error {
@@ -115,4 +121,9 @@ func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
 		return err
 	}
 	return wsbase.SendMessageToClient(conn, "GET_GUILD_CHANNELS", jsonChannelList)
+}
+
+func (body *CrawlChannelRequestBody) handle(conn *websocket.Conn) error {
+	crawler.CrawlChannel(body.AuthorizationToken, body.ChannelId)
+	return nil
 }

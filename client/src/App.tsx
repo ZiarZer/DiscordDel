@@ -182,12 +182,23 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, loadedGuild]
   );
+  const sendCrawlChannelRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'CRAWL_CHANNEL',
+        body: { authorizationToken, channelId: loadedChannel?.id },
+      }),
+    [sendJsonMessage, authorizationToken, loadedChannel]
+  );
 
   const userSectionActions = [
     { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
   ];
   const guildSectionActions = [
     { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
+  ];
+  const channelSectionActions = [
+    { label: 'Crawl channel', onClick: sendCrawlChannelRequest },
   ];
 
   return (
@@ -240,6 +251,7 @@ function App() {
             statusMessage={channelStatusMessage}
             currentObject={loadedChannel}
             infoFields={channelSectionInfoFields}
+            actions={channelSectionActions}
           />
         </LeftPanel>
         <PaginatedList

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ZiarZer/DiscordDel/crawl"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/gorilla/websocket"
@@ -34,10 +35,12 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 }
 
 var sdk discord.DiscordSdk
+var crawler crawl.Crawler
 
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
 	sdk = discord.DiscordSdk{}
+	crawler = crawl.Crawler{Sdk: &sdk}
 	utils.InternalLog(fmt.Sprintf("Websocket server started: ws://localhost:%d", port), utils.INFO)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

@@ -23,3 +23,11 @@ type Channel struct {
 	GuildId       string `json:"guild_id"`
 	MessageCount  int    `json:"message_count"`
 }
+
+type Message struct {
+	Id        string `json:"id"`
+	Content   string `json:"content"`
+	Type      int    `json:"type"`
+	ChannelId string `json:"channel_id"`
+	Author    User   `json:"author"`
+}

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) Login(authorizationToken string) *User {
+func (sdk *DiscordSdk) Login(authorizationToken string) *types.User {
 	resp, err := login(authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -23,13 +24,13 @@ func (sdk *DiscordSdk) Login(authorizationToken string) *User {
 		sdk.Log(string(body), utils.ERROR)
 		return nil
 	}
-	var loggedUser User
+	var loggedUser types.User
 	json.Unmarshal(body, &loggedUser)
 	sdk.Log(fmt.Sprintf("Successfully authenticated as %s (%s)", loggedUser.Username, loggedUser.Id), utils.SUCCESS)
 	return &loggedUser
 }
 
-func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []Guild {
+func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []types.Guild {
 	resp, err := getUserGuilds(authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -43,7 +44,7 @@ func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []Guild {
 	if resp.StatusCode != 200 {
 		sdk.Log(string(body), utils.ERROR)
 	}
-	var guilds []Guild
+	var guilds []types.Guild
 	json.Unmarshal(body, &guilds)
 	sdk.Log(fmt.Sprintf("Successfully got %d guilds for current user", len(guilds)), utils.SUCCESS)
 	return guilds

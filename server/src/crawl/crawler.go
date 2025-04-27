@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ZiarZer/DiscordDel/discord"
+	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
@@ -24,6 +25,6 @@ func (crawler *Crawler) CrawlChannel(authorizationToken string, channelId string
 	}
 }
 
-func (crawler *Crawler) fetchChannelMessages(authorizationToken string, channelId string, options *discord.GetChannelMessagesOptions) []discord.Message {
+func (crawler *Crawler) fetchChannelMessages(authorizationToken string, channelId string, options *discord.GetChannelMessagesOptions) []types.Message {
 	return crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
 }

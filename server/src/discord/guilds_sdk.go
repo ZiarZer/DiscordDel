@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *Guild {
+func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *types.Guild {
 	resp, err := getGuildById(guildId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -23,13 +24,13 @@ func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *Guil
 		sdk.Log(string(body), utils.ERROR)
 		return nil
 	}
-	var guild Guild
+	var guild types.Guild
 	json.Unmarshal(body, &guild)
 	sdk.Log(fmt.Sprintf("Successfully got guild %s (#%s)", guild.Name, guildId), utils.SUCCESS)
 	return &guild
 }
 
-func (sdk *DiscordSdk) GetGuildChannels(guildId string, authorizationToken string) []Channel {
+func (sdk *DiscordSdk) GetGuildChannels(guildId string, authorizationToken string) []types.Channel {
 	resp, err := getGuildChannels(guildId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -43,7 +44,7 @@ func (sdk *DiscordSdk) GetGuildChannels(guildId string, authorizationToken strin
 	if resp.StatusCode != 200 {
 		sdk.Log(string(body), utils.ERROR)
 	}
-	var channels []Channel
+	var channels []types.Channel
 	json.Unmarshal(body, &channels)
 	sdk.Log(fmt.Sprintf("Successfully got %d channels in guild %s", len(channels), guildId), utils.SUCCESS)
 	return channels

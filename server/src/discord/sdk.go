@@ -3,6 +3,8 @@ package discord
 import (
 	"encoding/json"
 
+	"github.com/ZiarZer/DiscordDel/data"
+
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/ZiarZer/DiscordDel/wsbase"
 	"github.com/gorilla/websocket"
@@ -10,6 +12,7 @@ import (
 
 type DiscordSdk struct {
 	wsConn *websocket.Conn
+	Repo   *data.Repository
 }
 
 func (sdk *DiscordSdk) SetWsConn(wsConn *websocket.Conn) {

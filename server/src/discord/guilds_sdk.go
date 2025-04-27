@@ -27,6 +27,7 @@ func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *type
 	var guild types.Guild
 	json.Unmarshal(body, &guild)
 	sdk.Log(fmt.Sprintf("Successfully got guild %s (#%s)", guild.Name, guildId), utils.SUCCESS)
+	sdk.Repo.InsertGuild(guild)
 	return &guild
 }
 
@@ -47,5 +48,6 @@ func (sdk *DiscordSdk) GetGuildChannels(guildId string, authorizationToken strin
 	var channels []types.Channel
 	json.Unmarshal(body, &channels)
 	sdk.Log(fmt.Sprintf("Successfully got %d channels in guild %s", len(channels), guildId), utils.SUCCESS)
+	sdk.Repo.InsertMultipleChannels(channels)
 	return channels
 }

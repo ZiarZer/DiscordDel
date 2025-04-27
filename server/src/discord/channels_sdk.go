@@ -27,6 +27,7 @@ func (sdk *DiscordSdk) GetChannel(channelId string, authorizationToken string) *
 	var channel types.Channel
 	json.Unmarshal(body, &channel)
 	sdk.Log(fmt.Sprintf("Successfully got channel %s (#%s)", channel.Name, channelId), utils.SUCCESS)
+	sdk.Repo.InsertChannel(channel)
 	return &channel
 }
 

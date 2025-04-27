@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ZiarZer/DiscordDel/crawl"
+	"github.com/ZiarZer/DiscordDel/data"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/gorilla/websocket"
@@ -39,7 +40,7 @@ var crawler crawl.Crawler
 
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
-	sdk = discord.DiscordSdk{}
+	sdk = discord.DiscordSdk{Repo: data.NewRepository()}
 	crawler = crawl.Crawler{Sdk: &sdk}
 	utils.InternalLog(fmt.Sprintf("Websocket server started: ws://localhost:%d", port), utils.INFO)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)

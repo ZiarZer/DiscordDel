@@ -47,5 +47,6 @@ func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []types.Guild {
 	var guilds []types.Guild
 	json.Unmarshal(body, &guilds)
 	sdk.Log(fmt.Sprintf("Successfully got %d guilds for current user", len(guilds)), utils.SUCCESS)
+	sdk.Repo.InsertMultipleGuilds(guilds)
 	return guilds
 }

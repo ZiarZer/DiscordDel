@@ -2,10 +2,10 @@ BIN=server
 SRC=main.go
 
 build:
-	go build -o $(BIN) $(SRC)
+	go build -o dist/$(BIN) $(SRC)
 
 run: build
-	./$(BIN)
+	./dist/$(BIN)
 
 clean:
 	rm -f $(BIN)

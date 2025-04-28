@@ -26,5 +26,7 @@ func (crawler *Crawler) CrawlChannel(authorizationToken string, channelId string
 }
 
 func (crawler *Crawler) fetchChannelMessages(authorizationToken string, channelId string, options *discord.GetChannelMessagesOptions) []types.Message {
-	return crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
+	messages := crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
+	crawler.Sdk.Repo.InsertMultipleMessages(messages)
+	return messages
 }

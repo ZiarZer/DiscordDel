@@ -20,6 +20,10 @@ func (repo *Repository) initTables() {
 	if err != nil {
 		panic(err)
 	}
+	err = repo.createMessagesTable()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func NewRepository() *Repository {

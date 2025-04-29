@@ -36,8 +36,9 @@ type GetChannelRequestBody struct {
 }
 
 type CrawlChannelRequestBody struct {
-	AuthorizationToken string `json:"authorizationToken"`
-	ChannelId          string `json:"channelId"`
+	AuthorizationToken string   `json:"authorizationToken"`
+	ChannelId          string   `json:"channelId"`
+	AuthorIds          []string `json:"authorIds"`
 }
 
 var bodyConstructors = map[string]func() RequestBody{
@@ -124,6 +125,6 @@ func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *CrawlChannelRequestBody) handle(conn *websocket.Conn) error {
-	crawler.CrawlChannel(body.AuthorizationToken, body.ChannelId)
+	crawler.CrawlChannel(body.AuthorizationToken, body.AuthorIds, body.ChannelId)
 	return nil
 }

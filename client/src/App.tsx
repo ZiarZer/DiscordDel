@@ -186,9 +186,13 @@ function App() {
     () =>
       sendJsonMessage({
         type: 'CRAWL_CHANNEL',
-        body: { authorizationToken, channelId: loadedChannel?.id },
+        body: {
+          authorizationToken,
+          channelId: loadedChannel?.id,
+          authorIds: [currentUser?.id],
+        },
       }),
-    [sendJsonMessage, authorizationToken, loadedChannel]
+    [sendJsonMessage, authorizationToken, loadedChannel, currentUser]
   );
 
   const userSectionActions = [

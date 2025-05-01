@@ -19,7 +19,11 @@ func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []stri
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get channel %s", channelId), utils.ERROR)
 		return
 	}
-	messages := crawler.fetchChannelMessages(authorizationToken, authorIds, channelId, &discord.GetChannelMessagesOptions{Around: &channel.LastMessageId})
+	if channel.LastMessageId == nil {
+		crawler.Sdk.Log("Channel doesn't contain messages: nothing to do", utils.INFO)
+		return
+	}
+	messages := crawler.fetchChannelMessages(authorizationToken, authorIds, channelId, &discord.GetChannelMessagesOptions{Around: channel.LastMessageId})
 	for len(messages) > 0 {
 		oldestReadMessageId := messages[len(messages)-1].Id
 		messages = crawler.fetchChannelMessages(authorizationToken, authorIds, channelId, &discord.GetChannelMessagesOptions{Before: &oldestReadMessageId})

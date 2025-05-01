@@ -24,6 +24,10 @@ func (repo *Repository) initTables() {
 	if err != nil {
 		panic(err)
 	}
+	err = repo.createCrawlingTable()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func NewRepository() *Repository {

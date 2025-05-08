@@ -51,3 +51,25 @@ func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId s
 	sdk.Log(fmt.Sprintf("Got %d messages in channel %s", len(messages), channelId), utils.SUCCESS)
 	return messages
 }
+
+func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChannelId string, options *SearchChannelThreadsOptions) []types.Channel {
+	resp, err := searchChannelThreads(authorizationToken, mainChannelId, options)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil
+	}
+
+	if resp.StatusCode != 200 {
+		sdk.Log(string(body), utils.ERROR)
+		return nil
+	}
+	var result types.ThreadsResult
+	json.Unmarshal(body, &result)
+	sdk.Log(fmt.Sprintf("Got %d threads in channel %s (offset %d)", len(result.Threads), mainChannelId, options.Offset), utils.SUCCESS)
+	return result.Threads
+}

@@ -69,3 +69,31 @@ func getChannelMessages(channelId string, options *GetChannelMessagesOptions, au
 	}
 	return request("GET", fmt.Sprintf("channels/%s/messages?%s", channelId, searchParams.Encode()), authorizationToken)
 }
+
+type SearchChannelThreadsOptions struct {
+	Offset    int
+	Limit     *int
+	Archived  *bool
+	SortBy    *string
+	SortOrder *string
+}
+
+func searchChannelThreads(authorizationToken string, mainChannelId string, options *SearchChannelThreadsOptions) (*http.Response, error) {
+	searchParams := url.Values{}
+	if options != nil {
+		searchParams.Add("offset", strconv.Itoa(options.Offset))
+		if options.Limit != nil {
+			searchParams.Add("limit", strconv.Itoa(*options.Limit))
+		}
+		if options.Archived != nil {
+			searchParams.Add("archived", strconv.FormatBool(*options.Archived))
+		}
+		if options.SortBy != nil {
+			searchParams.Add("sort_by", *options.SortBy)
+		}
+		if options.SortOrder != nil {
+			searchParams.Add("sort_order", *options.SortOrder)
+		}
+	}
+	return request("GET", fmt.Sprintf("/channels/%s/threads/search?%s", mainChannelId, searchParams.Encode()), authorizationToken)
+}

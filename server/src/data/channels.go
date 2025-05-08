@@ -76,3 +76,20 @@ func (repo *Repository) InsertMultipleChannels(channels []types.Channel) error {
 	}
 	return nil
 }
+
+func (repo *Repository) GetChannelChildrenCount(parentChannelId string) (int, error) {
+	stmt, err := repo.db.Prepare("SELECT count(*) FROM `channels` WHERE `parent_id` = ?")
+	if err != nil {
+		utils.InternalLog("Failed to prepare getting channel children count", utils.ERROR)
+		return 0, err
+	}
+	row := stmt.QueryRow(parentChannelId)
+
+	var count int
+	err = row.Scan(&count)
+	if err != nil {
+		utils.InternalLog("Failed to scan children count", utils.ERROR)
+		return 0, err
+	}
+	return count, nil
+}

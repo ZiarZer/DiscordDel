@@ -1,5 +1,25 @@
 package types
 
+type ChannelType int
+
+const (
+	GuildText         ChannelType = iota // 0
+	Dm                                   // 1
+	GuildVoice                           // 2
+	GroupDm                              // 3
+	GuildCategory                        // 4
+	GuildAnnouncement                    // 5
+)
+const (
+	AnnouncementThread ChannelType = iota + 10 // 10
+	PublicThread                               // 11
+	PrivateThread                              // 12
+	GuildStageVoice                            // 13
+	GuildDirectory                             // 14
+	GuildForum                                 // 15
+	GuildMedia                                 // 16
+)
+
 type User struct {
 	Id            string  `json:"id"`
 	Username      string  `json:"username"`
@@ -30,4 +50,17 @@ type Message struct {
 	Type      int    `json:"type"`
 	ChannelId string `json:"channel_id"`
 	Author    User   `json:"author"`
+}
+
+type ThreadMember struct {
+	Id     *string `json:"id"`
+	UserId *string `json:"user_id"`
+	Flags  int     `json:"flags"`
+}
+
+type ThreadsResult struct {
+	Threads       []Channel      `json:"threads"`
+	Members       []ThreadMember `json:"members"`
+	FirstMessages []Message      `json:"first_messages"`
+	HasMore       bool           `json:"has_more"`
 }

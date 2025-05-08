@@ -42,6 +42,17 @@ type CrawlChannelRequestBody struct {
 	AuthorIds          []types.Snowflake `json:"authorIds"`
 }
 
+type CrawlGuildRequestBody struct {
+	AuthorizationToken string            `json:"authorizationToken"`
+	GuildId            types.Snowflake   `json:"guildId"`
+	AuthorIds          []types.Snowflake `json:"authorIds"`
+}
+
+type CrawlAllGuildsRequestBody struct {
+	AuthorizationToken string            `json:"authorizationToken"`
+	AuthorIds          []types.Snowflake `json:"authorIds"`
+}
+
 var bodyConstructors = map[string]func() RequestBody{
 	"LOGIN":              func() RequestBody { return &LoginRequestBody{} },
 	"GET_USER_GUILDS":    func() RequestBody { return &GetUserGuildsRequestBody{} },
@@ -49,6 +60,8 @@ var bodyConstructors = map[string]func() RequestBody{
 	"GET_GUILD_CHANNELS": func() RequestBody { return &GetGuildChannelsRequestBody{} },
 	"GET_CHANNEL":        func() RequestBody { return &GetChannelRequestBody{} },
 	"CRAWL_CHANNEL":      func() RequestBody { return &CrawlChannelRequestBody{} },
+	"CRAWL_GUILD":        func() RequestBody { return &CrawlGuildRequestBody{} },
+	"CRAWL_ALL_GUILDS":   func() RequestBody { return &CrawlAllGuildsRequestBody{} },
 }
 
 func handleMessage(conn *websocket.Conn) error {
@@ -127,5 +140,15 @@ func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
 
 func (body *CrawlChannelRequestBody) handle(conn *websocket.Conn) error {
 	crawler.CrawlChannel(body.AuthorizationToken, body.AuthorIds, body.ChannelId)
+	return nil
+}
+
+func (body *CrawlGuildRequestBody) handle(conn *websocket.Conn) error {
+	crawler.CrawlGuild(body.AuthorizationToken, body.AuthorIds, body.GuildId)
+	return nil
+}
+
+func (body *CrawlAllGuildsRequestBody) handle(conn *websocket.Conn) error {
+	crawler.CrawlAllGuilds(body.AuthorizationToken, body.AuthorIds)
 	return nil
 }

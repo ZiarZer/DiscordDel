@@ -8,7 +8,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel *types.Channel, authorIds []string, crawlingInfo *types.CrawlingInfo) {
+func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel *types.Channel, authorIds []types.Snowflake, crawlingInfo *types.CrawlingInfo) {
 	if channel.LastMessageId == nil {
 		crawler.Sdk.Log("Channel doesn't contain messages: nothing to do", utils.INFO)
 	} else if crawlingInfo != nil {
@@ -32,7 +32,7 @@ func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel 
 	}
 }
 
-func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorIds []string, channelId string, options *discord.GetChannelMessagesOptions) []types.Message {
+func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options *discord.GetChannelMessagesOptions) []types.Message {
 	messages := crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
 
 	messagesToStore := []types.Message{}
@@ -46,7 +46,7 @@ func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorId
 	return messages
 }
 
-func (crawler *Crawler) storeChannelMessagesCrawlingInfo(channelId string, fetchedMessages []types.Message, fetchOptions *discord.GetChannelMessagesOptions) {
+func (crawler *Crawler) storeChannelMessagesCrawlingInfo(channelId types.Snowflake, fetchedMessages []types.Message, fetchOptions *discord.GetChannelMessagesOptions) {
 	if fetchOptions == nil {
 		if len(fetchedMessages) > 0 {
 			crawler.Sdk.Repo.InsertChannelCrawlingInfo(
@@ -57,11 +57,11 @@ func (crawler *Crawler) storeChannelMessagesCrawlingInfo(channelId string, fetch
 			)
 		}
 	} else {
-		var oldestReadMessageId *string
+		var oldestReadMessageId *types.Snowflake
 		if fetchOptions.Before != nil && len(fetchedMessages) > 0 {
 			oldestReadMessageId = &fetchedMessages[len(fetchedMessages)-1].Id
 		}
-		var newestReadMessageId *string
+		var newestReadMessageId *types.Snowflake
 		if fetchOptions.After != nil && len(fetchedMessages) > 0 {
 			newestReadMessageId = &fetchedMessages[0].Id
 		}

@@ -9,7 +9,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) GetChannel(channelId string, authorizationToken string) *types.Channel {
+func (sdk *DiscordSdk) GetChannel(channelId types.Snowflake, authorizationToken string) *types.Channel {
 	resp, err := getChannelById(channelId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -31,7 +31,7 @@ func (sdk *DiscordSdk) GetChannel(channelId string, authorizationToken string) *
 	return &channel
 }
 
-func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId string, options *GetChannelMessagesOptions) []types.Message {
+func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId types.Snowflake, options *GetChannelMessagesOptions) []types.Message {
 	resp, err := getChannelMessages(channelId, options, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -52,7 +52,7 @@ func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId s
 	return messages
 }
 
-func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChannelId string, options *SearchChannelThreadsOptions) []types.Channel {
+func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChannelId types.Snowflake, options *SearchChannelThreadsOptions) []types.Channel {
 	resp, err := searchChannelThreads(authorizationToken, mainChannelId, options)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)

@@ -9,7 +9,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *types.Guild {
+func (sdk *DiscordSdk) GetGuild(guildId types.Snowflake, authorizationToken string) *types.Guild {
 	resp, err := getGuildById(guildId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
@@ -31,7 +31,7 @@ func (sdk *DiscordSdk) GetGuild(guildId string, authorizationToken string) *type
 	return &guild
 }
 
-func (sdk *DiscordSdk) GetGuildChannels(guildId string, authorizationToken string) []types.Channel {
+func (sdk *DiscordSdk) GetGuildChannels(guildId types.Snowflake, authorizationToken string) []types.Channel {
 	resp, err := getGuildChannels(guildId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)

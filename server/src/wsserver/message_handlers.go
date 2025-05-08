@@ -3,6 +3,7 @@ package wsserver
 import (
 	"encoding/json"
 
+	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/ZiarZer/DiscordDel/wsbase"
 	"github.com/gorilla/websocket"
@@ -21,24 +22,24 @@ type GetUserGuildsRequestBody struct {
 }
 
 type GetGuildRequestBody struct {
-	AuthorizationToken string `json:"authorizationToken"`
-	GuildId            string `json:"guildId"`
+	AuthorizationToken string          `json:"authorizationToken"`
+	GuildId            types.Snowflake `json:"guildId"`
 }
 
 type GetGuildChannelsRequestBody struct {
-	AuthorizationToken string `json:"authorizationToken"`
-	GuildId            string `json:"guildId"`
+	AuthorizationToken string          `json:"authorizationToken"`
+	GuildId            types.Snowflake `json:"guildId"`
 }
 
 type GetChannelRequestBody struct {
-	AuthorizationToken string `json:"authorizationToken"`
-	ChannelId          string `json:"channelId"`
+	AuthorizationToken string          `json:"authorizationToken"`
+	ChannelId          types.Snowflake `json:"channelId"`
 }
 
 type CrawlChannelRequestBody struct {
-	AuthorizationToken string   `json:"authorizationToken"`
-	ChannelId          string   `json:"channelId"`
-	AuthorIds          []string `json:"authorIds"`
+	AuthorizationToken string            `json:"authorizationToken"`
+	ChannelId          types.Snowflake   `json:"channelId"`
+	AuthorIds          []types.Snowflake `json:"authorIds"`
 }
 
 var bodyConstructors = map[string]func() RequestBody{

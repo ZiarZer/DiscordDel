@@ -50,7 +50,7 @@ func (crawler *Crawler) crawlChannelThreads(authorizationToken string, mainChann
 	}
 }
 
-func (crawler *Crawler) fetchChannelThreads(authorizationToken string, mainChannelId string, options *discord.SearchChannelThreadsOptions) []types.Channel {
+func (crawler *Crawler) fetchChannelThreads(authorizationToken string, mainChannelId types.Snowflake, options *discord.SearchChannelThreadsOptions) []types.Channel {
 	threadChannels := crawler.Sdk.SearchChannelThreads(authorizationToken, mainChannelId, options)
 	crawler.Sdk.Repo.InsertMultipleChannels(threadChannels)
 	return threadChannels

@@ -12,7 +12,7 @@ type Crawler struct {
 	Sdk *discord.DiscordSdk
 }
 
-func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []string, channelId string) {
+func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake) {
 	channel := crawler.Sdk.GetChannel(channelId, authorizationToken)
 	if channel == nil {
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get channel %s", channelId), utils.ERROR)
@@ -24,7 +24,7 @@ func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []stri
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get crawling info for channel %s", channelId), utils.WARNING)
 	}
 
-	if channel.Type == int(types.GuildForum) {
+	if channel.Type == types.GuildForum {
 		crawler.crawlChannelThreads(authorizationToken, channel, crawlingInfo)
 	} else {
 		crawler.crawlChannelMessages(authorizationToken, channel, authorIds, crawlingInfo)

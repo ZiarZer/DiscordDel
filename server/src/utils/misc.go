@@ -1,13 +1,17 @@
 package utils
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/ZiarZer/DiscordDel/types"
+)
 
 func MakePointer[T any](value T) *T {
 	return &value
 }
 
-func GetTimestampFromSnowflake(snowflakeId string) int {
-	intSnowflake, err := strconv.Atoi(snowflakeId)
+func GetTimestampFromSnowflake(snowflakeId types.Snowflake) int {
+	intSnowflake, err := strconv.Atoi(string(snowflakeId))
 	if err != nil {
 		return 0
 	}

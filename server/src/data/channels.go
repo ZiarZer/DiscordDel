@@ -77,7 +77,7 @@ func (repo *Repository) InsertMultipleChannels(channels []types.Channel) error {
 	return nil
 }
 
-func (repo *Repository) GetChannelChildrenCount(parentChannelId string) (int, error) {
+func (repo *Repository) GetChannelChildrenCount(parentChannelId types.Snowflake) (int, error) {
 	stmt, err := repo.db.Prepare("SELECT count(*) FROM `channels` WHERE `parent_id` = ?")
 	if err != nil {
 		utils.InternalLog("Failed to prepare getting channel children count", utils.ERROR)

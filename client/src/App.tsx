@@ -194,12 +194,37 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, loadedChannel, currentUser]
   );
+  const sendCrawlGuildRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'CRAWL_GUILD',
+        body: {
+          authorizationToken,
+          guildId: loadedGuild?.id,
+          authorIds: [currentUser?.id],
+        },
+      }),
+    [sendJsonMessage, authorizationToken, loadedGuild, currentUser]
+  );
+  const sendCrawlAllGuildsRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'CRAWL_ALL_GUILDS',
+        body: {
+          authorizationToken,
+          authorIds: [currentUser?.id],
+        },
+      }),
+    [sendJsonMessage, authorizationToken, currentUser]
+  );
 
   const userSectionActions = [
     { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
+    { label: 'Crawl all guilds', onClick: sendCrawlAllGuildsRequest },
   ];
   const guildSectionActions = [
     { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
+    { label: 'Crawl guild', onClick: sendCrawlGuildRequest },
   ];
   const channelSectionActions = [
     { label: 'Crawl channel', onClick: sendCrawlChannelRequest },

@@ -50,6 +50,9 @@ func (repo *Repository) InsertMultipleMessages(messages []types.Message) error {
 		params[5*i+2] = messages[i].Type
 		params[5*i+3] = messages[i].ChannelId
 		params[5*i+4] = messages[i].Author.Id
+		if messages[i].InteractionMetadata != nil {
+			params[5*i+4] = messages[i].InteractionMetadata.Triggerer.Id
+		}
 	}
 	_, err = stmt.Exec(params...)
 	if err != nil {

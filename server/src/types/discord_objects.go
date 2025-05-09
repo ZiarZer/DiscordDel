@@ -27,11 +27,12 @@ type Channel struct {
 }
 
 type Message struct {
-	Id        Snowflake   `json:"id"`
-	Content   string      `json:"content"`
-	Type      MessageType `json:"type"`
-	ChannelId Snowflake   `json:"channel_id"`
-	Author    User        `json:"author"`
+	Id                  Snowflake                   `json:"id"`
+	Content             string                      `json:"content"`
+	Type                MessageType                 `json:"type"`
+	ChannelId           Snowflake                   `json:"channel_id"`
+	Author              User                        `json:"author"`
+	InteractionMetadata *MessageInteractionMetadata `json:"interaction_metadata"`
 }
 
 type ThreadMember struct {
@@ -47,8 +48,15 @@ type ThreadsResult struct {
 	HasMore       bool           `json:"has_more"`
 }
 
+type MessageInteractionMetadata struct {
+	Id        Snowflake       `json:"id"`
+	Type      InteractionType `json:"type"`
+	Triggerer User            `json:"user"`
+}
+
 type ChannelType int
 type MessageType int
+type InteractionType int
 
 const (
 	GuildText         ChannelType = iota // 0
@@ -112,4 +120,12 @@ const (
 	GuildIncidentReportFalseAlarm                          // 39
 	PurchaseNotification           MessageType = 44        // 44
 	PollResult                     MessageType = 46        // 46
+)
+
+const (
+	Ping                           InteractionType = iota + 1 // 1
+	ApplicationCommand                                        // 2
+	MessageComponent                                          // 3
+	ApplicationCommandAutocomplete                            // 4
+	ModalSubmit                                               // 5
 )

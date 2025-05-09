@@ -39,6 +39,8 @@ func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorId
 	for i := range messages {
 		if slices.Contains(authorIds, messages[i].Author.Id) {
 			messagesToStore = append(messagesToStore, messages[i])
+		} else if messages[i].InteractionMetadata != nil && slices.Contains(authorIds, messages[i].InteractionMetadata.Triggerer.Id) {
+			messagesToStore = append(messagesToStore, messages[i])
 		}
 	}
 	crawler.Sdk.Repo.InsertMultipleMessages(messagesToStore)

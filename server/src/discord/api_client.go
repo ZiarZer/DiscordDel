@@ -31,8 +31,6 @@ func (apiClient *ApiClient) request(method string, endpoint string, authorizatio
 	timeSinceLastRequest := time.Now().UnixMilli() - int64(apiClient.lastRequestUnixTime)
 	if timeSinceLastRequest < int64(apiClient.Delay) {
 		time.Sleep(time.Duration(apiClient.Delay*1000000) - time.Duration(timeSinceLastRequest*1000000))
-	} else {
-		utils.InternalLog(fmt.Sprintf("%d", timeSinceLastRequest), nil)
 	}
 	resp, err := httpClient.Do(req)
 	apiClient.lastRequestUnixTime = time.Now().UnixMilli()
@@ -128,4 +126,27 @@ func (apiClient *ApiClient) searchChannelThreads(authorizationToken string, main
 		}
 	}
 	return apiClient.request("GET", fmt.Sprintf("/channels/%s/threads/search?%s", mainChannelId, searchParams.Encode()), authorizationToken, 3)
+}
+
+type GetMessageReactionsOptions struct {
+	Limit *int
+	After *types.Snowflake
+}
+
+func (apiClient *ApiClient) getMessageReactions(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake, emoji string, burst bool, options *GetMessageReactionsOptions) (*http.Response, error) {
+	searchParams := url.Values{}
+	if burst {
+		searchParams.Add("type", "1")
+	} else {
+		searchParams.Add("type", "0")
+	}
+	if options != nil {
+		if options.Limit != nil {
+			searchParams.Add("limit", strconv.Itoa(*options.Limit))
+		}
+		if options.After != nil {
+			searchParams.Add("after", string(*options.After))
+		}
+	}
+	return apiClient.request("GET", fmt.Sprintf("channels/%s/messages/%s/reactions/%s?%s", channelId, messageId, emoji, searchParams.Encode()), authorizationToken, 3)
 }

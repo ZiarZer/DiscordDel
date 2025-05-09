@@ -33,6 +33,31 @@ type Message struct {
 	ChannelId           Snowflake                   `json:"channel_id"`
 	Author              User                        `json:"author"`
 	InteractionMetadata *MessageInteractionMetadata `json:"interaction_metadata"`
+	Reactions           []ReactionSummary           `json:"reactions"`
+}
+
+type ReactionSummary struct {
+	Emoji        Emoji                `json:"emoji"`
+	Count        int                  `json:"count"`
+	CountDetails ReactionCountDetails `json:"count_details"`
+	Me           int                  `json:"me"`
+	MeBurst      int                  `json:"me_burst"`
+}
+
+type Emoji struct {
+	Id   *Snowflake `json:"id"`
+	Name *string    `json:"name"`
+}
+type ReactionCountDetails struct {
+	Burst  int `json:"burst"`
+	Normal int `json:"normal"`
+}
+
+type Reaction struct {
+	MessageId Snowflake `json:"id"`
+	UserId    Snowflake `json:"content"`
+	Emoji     string    `json:"type"`
+	IsBurst   bool      `json:"is_burst"`
 }
 
 type ThreadMember struct {

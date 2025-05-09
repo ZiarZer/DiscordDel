@@ -44,6 +44,11 @@ func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorId
 		}
 	}
 	crawler.Sdk.Repo.InsertMultipleMessages(messagesToStore)
+	for i := range messages {
+		if messages[i].Reactions != nil {
+			crawler.crawlMessageReactions(authorizationToken, &messages[i], authorIds)
+		}
+	}
 	crawler.storeChannelMessagesCrawlingInfo(channelId, messages, options)
 	return messages
 }

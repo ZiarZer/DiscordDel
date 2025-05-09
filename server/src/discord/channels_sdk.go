@@ -10,7 +10,7 @@ import (
 )
 
 func (sdk *DiscordSdk) GetChannel(channelId types.Snowflake, authorizationToken string) *types.Channel {
-	resp, err := getChannelById(channelId, authorizationToken)
+	resp, err := sdk.ApiClient.getChannelById(channelId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -32,7 +32,7 @@ func (sdk *DiscordSdk) GetChannel(channelId types.Snowflake, authorizationToken 
 }
 
 func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId types.Snowflake, options *GetChannelMessagesOptions) []types.Message {
-	resp, err := getChannelMessages(channelId, options, authorizationToken)
+	resp, err := sdk.ApiClient.getChannelMessages(channelId, options, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -53,7 +53,7 @@ func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId t
 }
 
 func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChannelId types.Snowflake, options *SearchChannelThreadsOptions) []types.Channel {
-	resp, err := searchChannelThreads(authorizationToken, mainChannelId, options)
+	resp, err := sdk.ApiClient.searchChannelThreads(authorizationToken, mainChannelId, options)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil

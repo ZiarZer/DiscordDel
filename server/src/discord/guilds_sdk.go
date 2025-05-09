@@ -10,7 +10,7 @@ import (
 )
 
 func (sdk *DiscordSdk) GetGuild(guildId types.Snowflake, authorizationToken string) *types.Guild {
-	resp, err := getGuildById(guildId, authorizationToken)
+	resp, err := sdk.ApiClient.getGuildById(guildId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -32,7 +32,7 @@ func (sdk *DiscordSdk) GetGuild(guildId types.Snowflake, authorizationToken stri
 }
 
 func (sdk *DiscordSdk) GetGuildChannels(guildId types.Snowflake, authorizationToken string) []types.Channel {
-	resp, err := getGuildChannels(guildId, authorizationToken)
+	resp, err := sdk.ApiClient.getGuildChannels(guildId, authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil

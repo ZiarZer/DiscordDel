@@ -11,8 +11,9 @@ import (
 )
 
 type DiscordSdk struct {
-	wsConn *websocket.Conn
-	Repo   *data.Repository
+	wsConn    *websocket.Conn
+	Repo      *data.Repository
+	ApiClient *ApiClient
 }
 
 func (sdk *DiscordSdk) SetWsConn(wsConn *websocket.Conn) {

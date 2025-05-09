@@ -2,16 +2,24 @@ package discord
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/ZiarZer/DiscordDel/types"
+	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 const DiscordApibaseURL = "https://discord.com/api/v9"
 
-func request(method string, endpoint string, authorizationToken string) (*http.Response, error) {
+type ApiClient struct {
+	Delay               int
+	lastRequestUnixTime int64
+}
+
+func (apiClient *ApiClient) request(method string, endpoint string, authorizationToken string, retriesLeft int) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s", DiscordApibaseURL, endpoint)
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
@@ -19,31 +27,44 @@ func request(method string, endpoint string, authorizationToken string) (*http.R
 	}
 	req.Header.Add("Authorization", authorizationToken)
 	httpClient := &http.Client{}
+
+	timeSinceLastRequest := time.Now().UnixMilli() - int64(apiClient.lastRequestUnixTime)
+	if timeSinceLastRequest < int64(apiClient.Delay) {
+		time.Sleep(time.Duration(apiClient.Delay*1000000) - time.Duration(timeSinceLastRequest*1000000))
+	} else {
+		utils.InternalLog(fmt.Sprintf("%d", timeSinceLastRequest), nil)
+	}
 	resp, err := httpClient.Do(req)
+	apiClient.lastRequestUnixTime = time.Now().UnixMilli()
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode == 429 && retriesLeft > 0 {
+		apiClient.Delay = int(math.Round(1.5 * float64(apiClient.Delay)))
+		utils.InternalLog(fmt.Sprintf("Rate limited - Delay multiplied by 1.5, current value: %dms", apiClient.Delay), utils.INFO)
+		return apiClient.request(method, endpoint, authorizationToken, retriesLeft-1)
 	}
 	return resp, nil
 }
 
-func login(authorizationToken string) (*http.Response, error) {
-	return request("GET", "users/@me", authorizationToken)
+func (apiClient *ApiClient) login(authorizationToken string) (*http.Response, error) {
+	return apiClient.request("GET", "users/@me", authorizationToken, 3)
 }
 
-func getUserGuilds(authorizationToken string) (*http.Response, error) {
-	return request("GET", "users/@me/guilds", authorizationToken)
+func (apiClient *ApiClient) getUserGuilds(authorizationToken string) (*http.Response, error) {
+	return apiClient.request("GET", "users/@me/guilds", authorizationToken, 3)
 }
 
-func getGuildById(guildId types.Snowflake, authorizationToken string) (*http.Response, error) {
-	return request("GET", fmt.Sprintf("guilds/%s", guildId), authorizationToken)
+func (apiClient *ApiClient) getGuildById(guildId types.Snowflake, authorizationToken string) (*http.Response, error) {
+	return apiClient.request("GET", fmt.Sprintf("guilds/%s", guildId), authorizationToken, 3)
 }
 
-func getGuildChannels(guildId types.Snowflake, authorizationToken string) (*http.Response, error) {
-	return request("GET", fmt.Sprintf("guilds/%s/channels", guildId), authorizationToken)
+func (apiClient *ApiClient) getGuildChannels(guildId types.Snowflake, authorizationToken string) (*http.Response, error) {
+	return apiClient.request("GET", fmt.Sprintf("guilds/%s/channels", guildId), authorizationToken, 3)
 }
 
-func getChannelById(channelId types.Snowflake, authorizationToken string) (*http.Response, error) {
-	return request("GET", fmt.Sprintf("channels/%s", channelId), authorizationToken)
+func (apiClient *ApiClient) getChannelById(channelId types.Snowflake, authorizationToken string) (*http.Response, error) {
+	return apiClient.request("GET", fmt.Sprintf("channels/%s", channelId), authorizationToken, 3)
 }
 
 type GetChannelMessagesOptions struct {
@@ -53,7 +74,7 @@ type GetChannelMessagesOptions struct {
 	Around *types.Snowflake
 }
 
-func getChannelMessages(channelId types.Snowflake, options *GetChannelMessagesOptions, authorizationToken string) (*http.Response, error) {
+func (apiClient *ApiClient) getChannelMessages(channelId types.Snowflake, options *GetChannelMessagesOptions, authorizationToken string) (*http.Response, error) {
 	searchParams := url.Values{}
 	if options != nil {
 		if options.Limit != nil {
@@ -69,7 +90,7 @@ func getChannelMessages(channelId types.Snowflake, options *GetChannelMessagesOp
 			searchParams.Add("around", string(*options.Around))
 		}
 	}
-	return request("GET", fmt.Sprintf("channels/%s/messages?%s", channelId, searchParams.Encode()), authorizationToken)
+	return apiClient.request("GET", fmt.Sprintf("channels/%s/messages?%s", channelId, searchParams.Encode()), authorizationToken, 3)
 }
 
 type SearchChannelThreadsOptions struct {
@@ -80,7 +101,7 @@ type SearchChannelThreadsOptions struct {
 	SortOrder *string
 }
 
-func searchChannelThreads(authorizationToken string, mainChannelId types.Snowflake, options *SearchChannelThreadsOptions) (*http.Response, error) {
+func (apiClient *ApiClient) searchChannelThreads(authorizationToken string, mainChannelId types.Snowflake, options *SearchChannelThreadsOptions) (*http.Response, error) {
 	searchParams := url.Values{}
 	if options != nil {
 		searchParams.Add("offset", strconv.Itoa(options.Offset))
@@ -97,5 +118,5 @@ func searchChannelThreads(authorizationToken string, mainChannelId types.Snowfla
 			searchParams.Add("sort_order", *options.SortOrder)
 		}
 	}
-	return request("GET", fmt.Sprintf("/channels/%s/threads/search?%s", mainChannelId, searchParams.Encode()), authorizationToken)
+	return apiClient.request("GET", fmt.Sprintf("/channels/%s/threads/search?%s", mainChannelId, searchParams.Encode()), authorizationToken, 3)
 }

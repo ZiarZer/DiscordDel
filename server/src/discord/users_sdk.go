@@ -10,7 +10,7 @@ import (
 )
 
 func (sdk *DiscordSdk) Login(authorizationToken string) *types.User {
-	resp, err := login(authorizationToken)
+	resp, err := sdk.ApiClient.login(authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -31,7 +31,7 @@ func (sdk *DiscordSdk) Login(authorizationToken string) *types.User {
 }
 
 func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []types.Guild {
-	resp, err := getUserGuilds(authorizationToken)
+	resp, err := sdk.ApiClient.getUserGuilds(authorizationToken)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil

@@ -40,7 +40,7 @@ var crawler crawl.Crawler
 
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
-	sdk = discord.DiscordSdk{Repo: data.NewRepository()}
+	sdk = discord.DiscordSdk{Repo: data.NewRepository(), ApiClient: &discord.ApiClient{Delay: 700}}
 	crawler = crawl.Crawler{Sdk: &sdk}
 	utils.InternalLog(fmt.Sprintf("Websocket server started: ws://localhost:%d", port), utils.INFO)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)

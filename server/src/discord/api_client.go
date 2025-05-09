@@ -15,7 +15,7 @@ import (
 const DiscordApibaseURL = "https://discord.com/api/v9"
 
 type ApiClient struct {
-	Delay               int
+	Delay               int // Delay in ms
 	lastRequestUnixTime int64
 }
 
@@ -39,10 +39,19 @@ func (apiClient *ApiClient) request(method string, endpoint string, authorizatio
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == 429 && retriesLeft > 0 {
+	if resp.StatusCode == 429 {
+		utils.InternalLog("Rate limited", utils.WARNING)
 		apiClient.Delay = int(math.Round(1.5 * float64(apiClient.Delay)))
-		utils.InternalLog(fmt.Sprintf("Rate limited - Delay multiplied by 1.5, current value: %dms", apiClient.Delay), utils.INFO)
-		return apiClient.request(method, endpoint, authorizationToken, retriesLeft-1)
+		utils.InternalLog(fmt.Sprintf("Delay multiplied by 1.5, current value: %dms", apiClient.Delay), utils.INFO)
+
+		retryAfter, err := strconv.ParseFloat(resp.Header.Get("retry_after"), 32)
+		if err != nil {
+			retryAfter = 2.
+		}
+		time.Sleep(time.Duration(retryAfter * 1000000000))
+		if retriesLeft > 0 {
+			return apiClient.request(method, endpoint, authorizationToken, retriesLeft-1)
+		}
 	}
 	return resp, nil
 }

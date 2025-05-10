@@ -106,14 +106,13 @@ function App() {
     [loadedChannel]
   );
 
-  const [logs, setLogs] = useState<Array<LogEntry>>([]);
-  const addLog = useCallback(({ logLevel, message }: LogEntry) => {
-    setLogs((currentLogs) =>
-      currentLogs.length >= 50
-        ? currentLogs.slice(1).concat([{ logLevel, message }])
-        : [...currentLogs, { logLevel, message }]
-    );
-  }, []);
+  const [persistentLogs, setPersistentLogs] = useState<Array<LogEntry>>([]);
+  const [currentTempLog, setCurrentTempLog] = useState<LogEntry | null>(null);
+  const logs = useMemo(
+    () =>
+      currentTempLog ? [...persistentLogs, currentTempLog] : persistentLogs,
+    [currentTempLog, persistentLogs]
+  );
 
   useEffect(() => {
     if (lastJsonMessage?.type === 'LOGIN') {
@@ -129,9 +128,17 @@ function App() {
       setResultsList(lastJsonMessage.body as Array<Guild> | Array<Channel>);
       setIsChannelType(lastJsonMessage.type === 'GET_GUILD_CHANNELS');
     } else if (lastJsonMessage?.type === 'LOG') {
-      addLog(lastJsonMessage.body as LogEntry);
+      const { logLevel, message } = lastJsonMessage.body as LogEntry;
+      setCurrentTempLog(null);
+      setPersistentLogs((currentLogs) =>
+        currentLogs.length >= 50
+          ? currentLogs.slice(1).concat([{ logLevel, message }])
+          : [...currentLogs, { logLevel, message }]
+      );
+    } else if (lastJsonMessage?.type === 'TEMP_LOG') {
+      setCurrentTempLog(lastJsonMessage.body as LogEntry);
     }
-  }, [lastJsonMessage, lastMessage, addLog]);
+  }, [lastJsonMessage, lastMessage]);
 
   const [authorizationToken, setAuthorizationToken] = useState('');
   const [inputGuildId, setInputGuildId] = useState('');

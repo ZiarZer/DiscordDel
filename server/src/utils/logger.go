@@ -37,5 +37,9 @@ func getLogTag(logLevel *LogLevel) string {
 }
 
 func InternalLog(message string, logLevel *LogLevel) {
-	fmt.Printf("%s %s\n", getLogTag(logLevel), message)
+	fmt.Printf("%s %s\033[K\n", getLogTag(logLevel), message)
+}
+
+func TempInternalLog(message string, logLevel *LogLevel) {
+	fmt.Printf("%s %s\033[K\r", getLogTag(logLevel), message)
 }

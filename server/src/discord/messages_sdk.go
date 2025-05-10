@@ -26,6 +26,6 @@ func (sdk *DiscordSdk) GetMessageReactions(authorizationToken string, channelId 
 	}
 	var usersReacted []types.User
 	json.Unmarshal(body, &usersReacted)
-	sdk.Log(fmt.Sprintf("Got %d users who reacted %s on message %s", len(usersReacted), emoji, messageId), utils.SUCCESS)
+	sdk.TempLog(fmt.Sprintf("Got %d users who reacted %s on message %s", len(usersReacted), emoji, messageId), utils.SUCCESS)
 	return usersReacted
 }

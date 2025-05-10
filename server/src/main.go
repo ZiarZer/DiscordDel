@@ -7,7 +7,7 @@ import (
 	"github.com/ZiarZer/DiscordDel/wsserver"
 )
 
-const Version = "0.4.6"
+const Version = "0.5.0"
 
 func main() {
 	utils.InternalLog(fmt.Sprintf("DiscordDel - v%s", Version), nil)

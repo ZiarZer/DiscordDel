@@ -25,15 +25,25 @@ type LogEntry struct {
 	Message  string `json:"message"`
 }
 
-func (sdk *DiscordSdk) Log(message string, logLevel *utils.LogLevel) {
-	utils.InternalLog(message, logLevel)
-
+func (sdk *DiscordSdk) sendLogEntryToClient(message string, logLevel utils.LogLevel, websocketMessageType string) {
 	if sdk.wsConn != nil {
 		jsonLogEntry, err := json.Marshal(LogEntry{LogLevel: logLevel.Name, Message: message})
 		if err != nil {
 			utils.InternalLog("Failed to serialize log data", utils.ERROR)
 			return
 		}
-		wsbase.SendMessageToClient(sdk.wsConn, "LOG", jsonLogEntry)
+		wsbase.SendMessageToClient(sdk.wsConn, websocketMessageType, jsonLogEntry)
 	}
+}
+
+func (sdk *DiscordSdk) TempLog(message string, logLevel *utils.LogLevel) {
+	utils.TempInternalLog(message, logLevel)
+
+	sdk.sendLogEntryToClient(message, *logLevel, "TEMP_LOG")
+}
+
+func (sdk *DiscordSdk) Log(message string, logLevel *utils.LogLevel) {
+	utils.InternalLog(message, logLevel)
+
+	sdk.sendLogEntryToClient(message, *logLevel, "LOG")
 }

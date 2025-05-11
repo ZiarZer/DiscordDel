@@ -64,3 +64,64 @@ func (repo *Repository) InsertMultipleMessages(messages []types.Message, status 
 	}
 	return nil
 }
+
+func (repo *Repository) GetMessagesByChannelId(channelId types.Snowflake, authorIds []types.Snowflake) ([]types.Message, error) {
+	if len(authorIds) == 0 {
+		return []types.Message{}, nil
+	}
+	authorIdsParams := strings.TrimSuffix(strings.Repeat("?, ", len(authorIds)), ", ")
+	stmt, err := repo.db.Prepare(
+		fmt.Sprintf(
+			"SELECT `id`, `content`, `type`, `channel_id`, `author_id`, `pinned` FROM `messages` WHERE `channel_id` = ? AND `author_id` IN (%s) ORDER BY `id`",
+			authorIdsParams,
+		),
+	)
+	if err != nil {
+		utils.InternalLog("Failed to prepare getting messages by channel ID", utils.ERROR)
+		utils.InternalLog(err.Error(), utils.DEBUG)
+		return nil, err
+	}
+	params := []any{types.Snowflake(channelId)}
+	for i := range authorIds {
+		params = append(params, string(authorIds[i]))
+	}
+	rows, err := stmt.Query(params...)
+	if err != nil {
+		utils.InternalLog("Failed to get messages by channel ID", utils.ERROR)
+		return nil, err
+	}
+	defer rows.Close()
+	var messages []types.Message
+	for rows.Next() {
+		var message types.Message
+		err = rows.Scan(&message.Id, &message.Content, &message.Type, &message.ChannelId, &message.Author.Id, &message.Pinned)
+		messages = append(messages, message)
+		if err != nil {
+			return messages, err
+		}
+	}
+	return messages, nil
+}
+
+func (repo *Repository) UpdateMultipleMessageStatus(messageIds []types.Snowflake, updatedStatus string) error {
+	if len(messageIds) == 0 {
+		return nil
+	}
+	messageIdsParams := strings.TrimSuffix(strings.Repeat("?, ", len(messageIds)), ", ")
+	stmt, err := repo.db.Prepare(fmt.Sprintf("UPDATE `messages` SET `status` = ? WHERE `id` IN (%s)", messageIdsParams))
+	if err != nil {
+		utils.InternalLog("Failed to prepare message status update", utils.ERROR)
+		return err
+	}
+	params := []any{updatedStatus}
+	for i := range messageIds {
+		params = append(params, messageIds[i])
+	}
+	_, err = stmt.Exec(params...)
+
+	if err != nil {
+		utils.InternalLog("Failed to update message status", utils.ERROR)
+		return err
+	}
+	return nil
+}

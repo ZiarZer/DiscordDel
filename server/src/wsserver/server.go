@@ -6,6 +6,7 @@ import (
 
 	"github.com/ZiarZer/DiscordDel/crawl"
 	"github.com/ZiarZer/DiscordDel/data"
+	"github.com/ZiarZer/DiscordDel/delete"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/gorilla/websocket"
@@ -37,11 +38,13 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 
 var sdk discord.DiscordSdk
 var crawler crawl.Crawler
+var deleter delete.Deleter
 
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
 	sdk = discord.DiscordSdk{Repo: data.NewRepository(), ApiClient: &discord.ApiClient{Delay: 700}}
 	crawler = crawl.Crawler{Sdk: &sdk}
+	deleter = delete.Deleter{Sdk: &sdk}
 	utils.InternalLog(fmt.Sprintf("Websocket server started: ws://localhost:%d", port), utils.INFO)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

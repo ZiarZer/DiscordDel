@@ -157,6 +157,10 @@ type GetMessageReactionsOptions struct {
 	After *types.Snowflake
 }
 
+func (apiClient *ApiClient) deleteMessage(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake) (*http.Response, error) {
+	return apiClient.request("DELETE", fmt.Sprintf("channels/%s/messages/%s", channelId, messageId), nil, authorizationToken, 3)
+}
+
 func (apiClient *ApiClient) getMessageReactions(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake, emoji string, burst bool, options *GetMessageReactionsOptions) (*http.Response, error) {
 	searchParams := url.Values{}
 	if burst {

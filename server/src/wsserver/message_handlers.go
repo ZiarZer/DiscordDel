@@ -53,15 +53,22 @@ type CrawlAllGuildsRequestBody struct {
 	AuthorIds          []types.Snowflake `json:"authorIds"`
 }
 
+type DeleteChannelDataRequestBody struct {
+	AuthorizationToken string            `json:"authorizationToken"`
+	AuthorIds          []types.Snowflake `json:"authorIds"`
+	ChannelId          types.Snowflake   `json:"channelId"`
+}
+
 var bodyConstructors = map[string]func() RequestBody{
-	"LOGIN":              func() RequestBody { return &LoginRequestBody{} },
-	"GET_USER_GUILDS":    func() RequestBody { return &GetUserGuildsRequestBody{} },
-	"GET_GUILD":          func() RequestBody { return &GetGuildRequestBody{} },
-	"GET_GUILD_CHANNELS": func() RequestBody { return &GetGuildChannelsRequestBody{} },
-	"GET_CHANNEL":        func() RequestBody { return &GetChannelRequestBody{} },
-	"CRAWL_CHANNEL":      func() RequestBody { return &CrawlChannelRequestBody{} },
-	"CRAWL_GUILD":        func() RequestBody { return &CrawlGuildRequestBody{} },
-	"CRAWL_ALL_GUILDS":   func() RequestBody { return &CrawlAllGuildsRequestBody{} },
+	"LOGIN":               func() RequestBody { return &LoginRequestBody{} },
+	"GET_USER_GUILDS":     func() RequestBody { return &GetUserGuildsRequestBody{} },
+	"GET_GUILD":           func() RequestBody { return &GetGuildRequestBody{} },
+	"GET_GUILD_CHANNELS":  func() RequestBody { return &GetGuildChannelsRequestBody{} },
+	"GET_CHANNEL":         func() RequestBody { return &GetChannelRequestBody{} },
+	"CRAWL_CHANNEL":       func() RequestBody { return &CrawlChannelRequestBody{} },
+	"CRAWL_GUILD":         func() RequestBody { return &CrawlGuildRequestBody{} },
+	"CRAWL_ALL_GUILDS":    func() RequestBody { return &CrawlAllGuildsRequestBody{} },
+	"DELETE_CHANNEL_DATA": func() RequestBody { return &DeleteChannelDataRequestBody{} },
 }
 
 func handleMessage(conn *websocket.Conn) error {
@@ -150,5 +157,10 @@ func (body *CrawlGuildRequestBody) handle(conn *websocket.Conn) error {
 
 func (body *CrawlAllGuildsRequestBody) handle(conn *websocket.Conn) error {
 	crawler.CrawlAllGuilds(body.AuthorizationToken, body.AuthorIds)
+	return nil
+}
+
+func (body *DeleteChannelDataRequestBody) handle(conn *websocket.Conn) error {
+	deleter.DeleteChannelCrawledData(body.AuthorizationToken, body.AuthorIds, body.ChannelId)
 	return nil
 }

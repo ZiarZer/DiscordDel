@@ -17,13 +17,14 @@ type Guild struct {
 }
 
 type Channel struct {
-	Id            Snowflake   `json:"id"`
-	Name          *string     `json:"name"`
-	LastMessageId *Snowflake  `json:"last_message_id"`
-	Type          ChannelType `json:"type"`
-	ParentId      *Snowflake  `json:"parent_id"`
-	GuildId       *Snowflake  `json:"guild_id"`
-	MessageCount  *int        `json:"message_count"`
+	Id             Snowflake       `json:"id"`
+	Name           *string         `json:"name"`
+	LastMessageId  *Snowflake      `json:"last_message_id"`
+	Type           ChannelType     `json:"type"`
+	ParentId       *Snowflake      `json:"parent_id"`
+	GuildId        *Snowflake      `json:"guild_id"`
+	MessageCount   *int            `json:"message_count"`
+	ThreadMetadata *ThreadMetadata `json:"thread_metadata"`
 }
 
 type Message struct {
@@ -79,6 +80,12 @@ type ThreadData struct {
 }
 type ThreadsDataResult struct {
 	Threads map[Snowflake]ThreadData `json:"threads"`
+}
+type ThreadMetadata struct {
+	Archived         bool    `json:"archived"`
+	ArchiveTimestamp string  `json:"archive_timestamp"`
+	Locked           bool    `json:"locked"`
+	CreateTimestamp  *string `json:"create_timestamp"`
 }
 
 type MessageInteractionMetadata struct {

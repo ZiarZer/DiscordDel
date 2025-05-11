@@ -26,11 +26,19 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 			return
 		}
 	}
+	if len(messages) == 0 {
+		deleter.Sdk.Log(fmt.Sprintf("No message to delete in channel %s", channelId), utils.INFO)
+		return
+	}
+
+	channel := deleter.Sdk.GetChannel(channelId, authorizationToken)
+	if channel.ThreadMetadata != nil && channel.ThreadMetadata.Archived {
+		deleter.Sdk.UnarchiveThread(authorizationToken, channelId)
+	}
 
 	var deletedMessageIds []types.Snowflake
 	var failedToDeleteMessageIds []types.Snowflake
 
-	deleter.Sdk.Log(fmt.Sprintf("%d", len(messages)), utils.DEBUG)
 	for i := range messages {
 		success := deleter.Sdk.DeleteMessage(authorizationToken, channelId, messages[i].Id)
 		if success {

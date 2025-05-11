@@ -78,7 +78,6 @@ func (repo *Repository) GetMessagesByChannelId(channelId types.Snowflake, author
 	)
 	if err != nil {
 		utils.InternalLog("Failed to prepare getting messages by channel ID", utils.ERROR)
-		utils.InternalLog(err.Error(), utils.DEBUG)
 		return nil, err
 	}
 	params := []any{types.Snowflake(channelId)}

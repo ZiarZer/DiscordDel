@@ -152,6 +152,19 @@ func (apiClient *ApiClient) getThreadsData(authorizationToken string, mainChanne
 	return apiClient.request("POST", fmt.Sprintf("channels/%s/post-data", mainChannelId), &jsonBody, authorizationToken, 3)
 }
 
+type ModifyChannelBody struct {
+	Archived *bool `json:"archived"`
+}
+
+func (apiClient *ApiClient) modifyChannel(authorizationToken string, channelId types.Snowflake, body ModifyChannelBody) (*http.Response, error) {
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		utils.InternalLog("Failed to serialize update channel data", utils.ERROR)
+		return nil, err
+	}
+	return apiClient.request("PATCH", fmt.Sprintf("channels/%s", channelId), &jsonBody, authorizationToken, 3)
+}
+
 type GetMessageReactionsOptions struct {
 	Limit *int
 	After *types.Snowflake

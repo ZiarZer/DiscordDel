@@ -95,3 +95,17 @@ func (sdk *DiscordSdk) GetThreadsData(authorizationToken string, mainChannelId t
 	sdk.Log(fmt.Sprintf("Got data for %d threads of channel %s", len(result.Threads), mainChannelId), utils.SUCCESS)
 	return &result
 }
+
+func (sdk *DiscordSdk) UnarchiveThread(authorizationToken string, threadId types.Snowflake) bool {
+	resp, err := sdk.ApiClient.modifyChannel(authorizationToken, threadId, ModifyChannelBody{Archived: utils.MakePointer(false)})
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return false
+	}
+	if resp.StatusCode != 200 {
+		sdk.Log(fmt.Sprintf("Failed to unarchive thread %s", threadId), utils.ERROR)
+		return false
+	}
+	sdk.Log(fmt.Sprintf("Successfully unarchived thread %s", threadId), utils.SUCCESS)
+	return true
+}

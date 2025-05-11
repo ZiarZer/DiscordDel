@@ -28,15 +28,15 @@ func (repo *Repository) createMessagesTable() error {
 	return nil
 }
 
-func (repo *Repository) InsertMultipleMessages(messages []types.Message) error {
+func (repo *Repository) InsertMultipleMessages(messages []types.Message, status string) error {
 	if len(messages) == 0 {
 		return nil
 	}
 
 	query := fmt.Sprintf(
-		"INSERT INTO `messages` (`id`, `content`, `type`, `channel_id`, `author_id`, `pinned`) VALUES %s\n"+
+		"INSERT INTO `messages` (`id`, `content`, `type`, `channel_id`, `author_id`, `pinned`, `status`) VALUES %s\n"+
 			"ON CONFLICT DO UPDATE SET `content` = EXCLUDED.`content`, `type` = EXCLUDED.`type`, `pinned` = EXCLUDED.`pinned`",
-		strings.TrimSuffix(strings.Repeat("(?, ?, ?, ?, ?, ?), ", len(messages)), ", "),
+		strings.TrimSuffix(strings.Repeat("(?, ?, ?, ?, ?, ?, ?), ", len(messages)), ", "),
 	)
 	stmt, err := repo.db.Prepare(query)
 	if err != nil {
@@ -44,17 +44,18 @@ func (repo *Repository) InsertMultipleMessages(messages []types.Message) error {
 		return err
 	}
 
-	params := make([]interface{}, len(messages)*6)
+	params := make([]interface{}, len(messages)*7)
 	for i := range messages {
-		params[6*i] = messages[i].Id
-		params[6*i+1] = messages[i].Content
-		params[6*i+2] = messages[i].Type
-		params[6*i+3] = messages[i].ChannelId
-		params[6*i+4] = messages[i].Author.Id
+		params[7*i] = messages[i].Id
+		params[7*i+1] = messages[i].Content
+		params[7*i+2] = messages[i].Type
+		params[7*i+3] = messages[i].ChannelId
+		params[7*i+4] = messages[i].Author.Id
 		if messages[i].InteractionMetadata != nil {
-			params[6*i+4] = messages[i].InteractionMetadata.Triggerer.Id
+			params[7*i+4] = messages[i].InteractionMetadata.Triggerer.Id
 		}
-		params[6*i+5] = messages[i].Pinned
+		params[7*i+5] = messages[i].Pinned
+		params[7*i+6] = status
 	}
 	_, err = stmt.Exec(params...)
 	if err != nil {

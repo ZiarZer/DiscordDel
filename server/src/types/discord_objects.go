@@ -74,6 +74,13 @@ type ThreadsResult struct {
 	HasMore       bool           `json:"has_more"`
 }
 
+type ThreadData struct {
+	FirstMessage Message `json:"first_message"`
+}
+type ThreadsDataResult struct {
+	Threads map[Snowflake]ThreadData `json:"threads"`
+}
+
 type MessageInteractionMetadata struct {
 	Id        Snowflake       `json:"id"`
 	Type      InteractionType `json:"type"`

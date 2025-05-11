@@ -1,7 +1,10 @@
 package discord
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -19,11 +22,18 @@ type ApiClient struct {
 	lastRequestUnixTime int64
 }
 
-func (apiClient *ApiClient) request(method string, endpoint string, authorizationToken string, retriesLeft int) (*http.Response, error) {
+func (apiClient *ApiClient) request(method string, endpoint string, body *[]byte, authorizationToken string, retriesLeft int) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s", DiscordApibaseURL, endpoint)
-	req, err := http.NewRequest(method, url, nil)
+	var bodyReader io.Reader
+	if body != nil {
+		bodyReader = bytes.NewReader(*body)
+	}
+	req, err := http.NewRequest(method, url, bodyReader)
 	if err != nil {
 		return nil, err
+	}
+	if body != nil {
+		req.Header.Add("Content-Type", "application/json")
 	}
 	req.Header.Add("Authorization", authorizationToken)
 	httpClient := &http.Client{}
@@ -48,30 +58,30 @@ func (apiClient *ApiClient) request(method string, endpoint string, authorizatio
 		}
 		time.Sleep(time.Duration(retryAfter * 1000000000))
 		if retriesLeft > 0 {
-			return apiClient.request(method, endpoint, authorizationToken, retriesLeft-1)
+			return apiClient.request(method, endpoint, body, authorizationToken, retriesLeft-1)
 		}
 	}
 	return resp, nil
 }
 
 func (apiClient *ApiClient) login(authorizationToken string) (*http.Response, error) {
-	return apiClient.request("GET", "users/@me", authorizationToken, 3)
+	return apiClient.request("GET", "users/@me", nil, authorizationToken, 3)
 }
 
 func (apiClient *ApiClient) getUserGuilds(authorizationToken string) (*http.Response, error) {
-	return apiClient.request("GET", "users/@me/guilds", authorizationToken, 3)
+	return apiClient.request("GET", "users/@me/guilds", nil, authorizationToken, 3)
 }
 
 func (apiClient *ApiClient) getGuildById(guildId types.Snowflake, authorizationToken string) (*http.Response, error) {
-	return apiClient.request("GET", fmt.Sprintf("guilds/%s", guildId), authorizationToken, 3)
+	return apiClient.request("GET", fmt.Sprintf("guilds/%s", guildId), nil, authorizationToken, 3)
 }
 
 func (apiClient *ApiClient) getGuildChannels(guildId types.Snowflake, authorizationToken string) (*http.Response, error) {
-	return apiClient.request("GET", fmt.Sprintf("guilds/%s/channels", guildId), authorizationToken, 3)
+	return apiClient.request("GET", fmt.Sprintf("guilds/%s/channels", guildId), nil, authorizationToken, 3)
 }
 
 func (apiClient *ApiClient) getChannelById(channelId types.Snowflake, authorizationToken string) (*http.Response, error) {
-	return apiClient.request("GET", fmt.Sprintf("channels/%s", channelId), authorizationToken, 3)
+	return apiClient.request("GET", fmt.Sprintf("channels/%s", channelId), nil, authorizationToken, 3)
 }
 
 type GetChannelMessagesOptions struct {
@@ -97,7 +107,7 @@ func (apiClient *ApiClient) getChannelMessages(channelId types.Snowflake, option
 			searchParams.Add("around", string(*options.Around))
 		}
 	}
-	return apiClient.request("GET", fmt.Sprintf("channels/%s/messages?%s", channelId, searchParams.Encode()), authorizationToken, 3)
+	return apiClient.request("GET", fmt.Sprintf("channels/%s/messages?%s", channelId, searchParams.Encode()), nil, authorizationToken, 3)
 }
 
 type SearchChannelThreadsOptions struct {
@@ -125,7 +135,21 @@ func (apiClient *ApiClient) searchChannelThreads(authorizationToken string, main
 			searchParams.Add("sort_order", *options.SortOrder)
 		}
 	}
-	return apiClient.request("GET", fmt.Sprintf("/channels/%s/threads/search?%s", mainChannelId, searchParams.Encode()), authorizationToken, 3)
+	return apiClient.request("GET", fmt.Sprintf("channels/%s/threads/search?%s", mainChannelId, searchParams.Encode()), nil, authorizationToken, 3)
+}
+
+type GetThreadDataBody struct {
+	ThreadIds []types.Snowflake `json:"thread_ids"`
+}
+
+func (apiClient *ApiClient) getThreadsData(authorizationToken string, mainChannelId types.Snowflake, threadIds []types.Snowflake) (*http.Response, error) {
+	body := GetThreadDataBody{ThreadIds: threadIds}
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		utils.InternalLog("Failed to serialize thread data", utils.ERROR)
+		return nil, err
+	}
+	return apiClient.request("POST", fmt.Sprintf("channels/%s/post-data", mainChannelId), &jsonBody, authorizationToken, 3)
 }
 
 type GetMessageReactionsOptions struct {
@@ -148,5 +172,5 @@ func (apiClient *ApiClient) getMessageReactions(authorizationToken string, chann
 			searchParams.Add("after", string(*options.After))
 		}
 	}
-	return apiClient.request("GET", fmt.Sprintf("channels/%s/messages/%s/reactions/%s?%s", channelId, messageId, emoji, searchParams.Encode()), authorizationToken, 3)
+	return apiClient.request("GET", fmt.Sprintf("channels/%s/messages/%s/reactions/%s?%s", channelId, messageId, emoji, searchParams.Encode()), nil, authorizationToken, 3)
 }

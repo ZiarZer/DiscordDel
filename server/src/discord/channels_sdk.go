@@ -73,3 +73,25 @@ func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChann
 	sdk.Log(fmt.Sprintf("Got %d threads in channel %s (offset %d)", len(result.Threads), mainChannelId, options.Offset), utils.SUCCESS)
 	return result.Threads
 }
+
+func (sdk *DiscordSdk) GetThreadsData(authorizationToken string, mainChannelId types.Snowflake, threadIds []types.Snowflake) *types.ThreadsDataResult {
+	resp, err := sdk.ApiClient.getThreadsData(authorizationToken, mainChannelId, threadIds)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil
+	}
+
+	if resp.StatusCode != 200 {
+		sdk.Log(string(body), utils.ERROR)
+		return nil
+	}
+	var result types.ThreadsDataResult
+	json.Unmarshal(body, &result)
+	sdk.Log(fmt.Sprintf("Got data for %d threads of channel %s", len(result.Threads), mainChannelId), utils.SUCCESS)
+	return &result
+}

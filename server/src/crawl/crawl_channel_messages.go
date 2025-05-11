@@ -10,10 +10,13 @@ import (
 
 func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel *types.Channel, authorIds []types.Snowflake, crawlingInfo *types.CrawlingInfo) {
 	if channel.Type == types.PublicThread || channel.Type == types.PrivateThread {
-		threadsData := crawler.Sdk.GetThreadsData(authorizationToken, *channel.ParentId, []types.Snowflake{channel.Id})
-		if threadsData != nil {
-			firstMessage := threadsData.Threads[channel.Id].FirstMessage
-			crawler.Sdk.Repo.InsertMultipleMessages([]types.Message{firstMessage}, "THREAD_FIRST_MESSAGE")
+		parentChannel := crawler.Sdk.GetChannel(*channel.ParentId, authorizationToken)
+		if parentChannel.Type == types.GuildForum {
+			threadsData := crawler.Sdk.GetThreadsData(authorizationToken, *channel.ParentId, []types.Snowflake{channel.Id})
+			if threadsData != nil {
+				firstMessage := threadsData.Threads[channel.Id].FirstMessage
+				crawler.Sdk.Repo.InsertMultipleMessages([]types.Message{firstMessage}, "THREAD_FIRST_MESSAGE")
+			}
 		}
 	}
 
@@ -45,6 +48,9 @@ func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorId
 	messages := crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
 
 	messagesToStore := utils.Filter(messages, func(message types.Message) bool {
+		if message.Type == types.ThreadStarterMessage {
+			return false
+		}
 		return slices.Contains(authorIds, message.Author.Id) ||
 			(message.InteractionMetadata != nil && slices.Contains(authorIds, message.InteractionMetadata.Triggerer.Id))
 	})

@@ -12,11 +12,16 @@ type Deleter struct {
 	Sdk *discord.DiscordSdk
 }
 
-func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake) {
-	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId)
+type DeleteOptions struct {
+	DeletePinned             bool
+	DeleteThreadFirstMessage bool
 }
 
-func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake) {
+func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
+	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId, options)
+}
+
+func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
 	messages, err := deleter.Sdk.Repo.GetMessagesByChannelId(channelId, authorIds)
 	if err != nil {
 		if messages != nil {
@@ -27,9 +32,15 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 		}
 	}
 
-	messagesToDelete := utils.Filter(messages, func(message types.Message) bool {
-		return !message.Pinned && (message.Status == nil || *message.Status != "THREAD_FIRST_MESSAGE")
-	})
+	messagesToDelete := utils.Filter(messages, func(message types.Message) bool { return message.Type != types.ThreadStarterMessage })
+	if !options.DeletePinned {
+		messagesToDelete = utils.Filter(messagesToDelete, func(message types.Message) bool { return !message.Pinned })
+	}
+	if !options.DeleteThreadFirstMessage {
+		messagesToDelete = utils.Filter(messagesToDelete, func(message types.Message) bool {
+			return message.Status == nil || *message.Status != "THREAD_FIRST_MESSAGE"
+		})
+	}
 	if len(messagesToDelete) == 0 {
 		deleter.Sdk.Log(fmt.Sprintf("No message to delete in channel %s", channelId), utils.INFO)
 		return

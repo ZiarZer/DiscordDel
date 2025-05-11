@@ -3,6 +3,7 @@ package wsserver
 import (
 	"encoding/json"
 
+	"github.com/ZiarZer/DiscordDel/delete"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/ZiarZer/DiscordDel/wsbase"
@@ -54,9 +55,10 @@ type CrawlAllGuildsRequestBody struct {
 }
 
 type DeleteChannelDataRequestBody struct {
-	AuthorizationToken string            `json:"authorizationToken"`
-	AuthorIds          []types.Snowflake `json:"authorIds"`
-	ChannelId          types.Snowflake   `json:"channelId"`
+	AuthorizationToken string               `json:"authorizationToken"`
+	AuthorIds          []types.Snowflake    `json:"authorIds"`
+	ChannelId          types.Snowflake      `json:"channelId"`
+	Options            delete.DeleteOptions `json:"options"`
 }
 
 var bodyConstructors = map[string]func() RequestBody{
@@ -161,6 +163,6 @@ func (body *CrawlAllGuildsRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *DeleteChannelDataRequestBody) handle(conn *websocket.Conn) error {
-	deleter.DeleteChannelCrawledData(body.AuthorizationToken, body.AuthorIds, body.ChannelId)
+	deleter.DeleteChannelCrawledData(body.AuthorizationToken, body.AuthorIds, body.ChannelId, body.Options)
 	return nil
 }

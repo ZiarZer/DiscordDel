@@ -3,6 +3,7 @@ package crawl
 import (
 	"fmt"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
@@ -13,6 +14,7 @@ type Crawler struct {
 }
 
 func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake) {
+	defer actions.StartAction(fmt.Sprintf("Crawl channel %s", channelId), crawler.Sdk.Log).EndAction()
 	channel := crawler.Sdk.GetChannel(channelId, authorizationToken)
 	if channel == nil {
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get channel %s", channelId), utils.ERROR)

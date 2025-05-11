@@ -3,6 +3,7 @@ package delete
 import (
 	"fmt"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
@@ -18,10 +19,12 @@ type DeleteOptions struct {
 }
 
 func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
+	defer actions.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log).EndAction()
 	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId, options)
 }
 
 func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
+	defer actions.StartAction(fmt.Sprintf("Delete crawled messages of channel %s", channelId), deleter.Sdk.TempLog).EndAction()
 	messages, err := deleter.Sdk.Repo.GetMessagesByChannelId(channelId, authorIds)
 	if err != nil {
 		if messages != nil {

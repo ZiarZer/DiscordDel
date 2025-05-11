@@ -1,12 +1,16 @@
 package crawl
 
 import (
+	"fmt"
+
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) crawlChannelThreads(authorizationToken string, mainChannel *types.Channel, crawlingInfo *types.CrawlingInfo) {
+	defer actions.StartAction(fmt.Sprintf("Crawl threads in channel %s", mainChannel.Id), crawler.Sdk.Log).EndAction()
 	pageSize := 25
 	options := discord.SearchChannelThreadsOptions{
 		SortBy:    utils.MakePointer("creation_time"),

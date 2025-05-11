@@ -72,7 +72,7 @@ func (repo *Repository) GetMessagesByChannelId(channelId types.Snowflake, author
 	authorIdsParams := strings.TrimSuffix(strings.Repeat("?, ", len(authorIds)), ", ")
 	stmt, err := repo.db.Prepare(
 		fmt.Sprintf(
-			"SELECT `id`, `content`, `type`, `channel_id`, `author_id`, `pinned` FROM `messages` WHERE `channel_id` = ? AND `author_id` IN (%s) ORDER BY `id`",
+			"SELECT `id`, `content`, `type`, `channel_id`, `author_id`, `pinned`, `status` FROM `messages` WHERE `channel_id` = ? AND `author_id` IN (%s) ORDER BY `id`",
 			authorIdsParams,
 		),
 	)
@@ -93,7 +93,7 @@ func (repo *Repository) GetMessagesByChannelId(channelId types.Snowflake, author
 	var messages []types.Message
 	for rows.Next() {
 		var message types.Message
-		err = rows.Scan(&message.Id, &message.Content, &message.Type, &message.ChannelId, &message.Author.Id, &message.Pinned)
+		err = rows.Scan(&message.Id, &message.Content, &message.Type, &message.ChannelId, &message.Author.Id, &message.Pinned, &message.Status)
 		messages = append(messages, message)
 		if err != nil {
 			return messages, err

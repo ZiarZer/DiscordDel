@@ -26,7 +26,13 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 			return
 		}
 	}
-	if len(messages) == 0 {
+	messagesToDelete := []types.Message{}
+	for i := range messages {
+		if !messages[i].Pinned && (messages[i].Status == nil || *messages[i].Status != "THREAD_FIRST_MESSAGE") {
+			messagesToDelete = append(messagesToDelete, messages[i])
+		}
+	}
+	if len(messagesToDelete) == 0 {
 		deleter.Sdk.Log(fmt.Sprintf("No message to delete in channel %s", channelId), utils.INFO)
 		return
 	}
@@ -35,8 +41,8 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 	if channel.ThreadMetadata != nil {
 		if channel.ThreadMetadata.Locked {
 			var messageIds []types.Snowflake
-			for i := range messages {
-				messageIds = append(messageIds, messages[i].Id)
+			for i := range messagesToDelete {
+				messageIds = append(messageIds, messagesToDelete[i].Id)
 			}
 			deleter.Sdk.Repo.UpdateMultipleMessageStatus(messageIds, "ERROR")
 			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d messages to delete", channelId, len(messageIds)), utils.ERROR)
@@ -49,15 +55,15 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 	var deletedMessageIds []types.Snowflake
 	var failedToDeleteMessageIds []types.Snowflake
 
-	for i := range messages {
-		success := deleter.Sdk.DeleteMessage(authorizationToken, channelId, messages[i].Id)
+	for i := range messagesToDelete {
+		success := deleter.Sdk.DeleteMessage(authorizationToken, channelId, messagesToDelete[i].Id)
 		if success {
-			deletedMessageIds = append(deletedMessageIds, messages[i].Id)
-			if len(messages[i].Content) > 0 {
-				deleter.Sdk.Log(messages[i].Content, nil)
+			deletedMessageIds = append(deletedMessageIds, messagesToDelete[i].Id)
+			if len(messagesToDelete[i].Content) > 0 {
+				deleter.Sdk.Log(messagesToDelete[i].Content, nil)
 			}
 		} else {
-			failedToDeleteMessageIds = append(failedToDeleteMessageIds, messages[i].Id)
+			failedToDeleteMessageIds = append(failedToDeleteMessageIds, messagesToDelete[i].Id)
 		}
 	}
 

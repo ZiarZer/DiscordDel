@@ -36,6 +36,7 @@ type Message struct {
 	InteractionMetadata *MessageInteractionMetadata `json:"interaction_metadata"`
 	Reactions           []ReactionSummary           `json:"reactions"`
 	Pinned              bool                        `json:"pinned"`
+	Status              *string
 }
 
 type ReactionSummary struct {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
+	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) crawlMessageReactions(authorizationToken string, message *types.Message, authorIds []types.Snowflake) {
@@ -41,12 +42,14 @@ func (crawler *Crawler) crawlReactionsOnEmoji(authorizationToken string, channel
 
 func (crawler *Crawler) fetchReactionsOnEmoji(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, options *discord.GetMessageReactionsOptions, authorIds []types.Snowflake) []types.User {
 	usersReacted := crawler.Sdk.GetMessageReactions(authorizationToken, channelId, messageId, emoji, isBurst, options)
-	var userIds []types.Snowflake
-	for i := range usersReacted {
-		if slices.Contains(authorIds, usersReacted[i].Id) && !slices.Contains(userIds, usersReacted[i].Id) {
-			userIds = append(userIds, usersReacted[i].Id)
-		}
-	}
+
+	userIds := utils.MapWithoutDuplicate(
+		utils.Filter(
+			usersReacted,
+			func(user types.User) bool { return slices.Contains(authorIds, user.Id) },
+		),
+		func(user types.User) types.Snowflake { return user.Id },
+	)
 	crawler.Sdk.Repo.InsertMultipleReactions(messageId, userIds, emoji, isBurst)
 	return usersReacted
 }

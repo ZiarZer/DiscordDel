@@ -44,14 +44,10 @@ func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel 
 func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options *discord.GetChannelMessagesOptions) []types.Message {
 	messages := crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
 
-	messagesToStore := []types.Message{}
-	for i := range messages {
-		if slices.Contains(authorIds, messages[i].Author.Id) {
-			messagesToStore = append(messagesToStore, messages[i])
-		} else if messages[i].InteractionMetadata != nil && slices.Contains(authorIds, messages[i].InteractionMetadata.Triggerer.Id) {
-			messagesToStore = append(messagesToStore, messages[i])
-		}
-	}
+	messagesToStore := utils.Filter(messages, func(message types.Message) bool {
+		return slices.Contains(authorIds, message.Author.Id) ||
+			(message.InteractionMetadata != nil && slices.Contains(authorIds, message.InteractionMetadata.Triggerer.Id))
+	})
 	crawler.Sdk.Repo.InsertMultipleMessages(messagesToStore, "PENDING")
 	for i := range messages {
 		if messages[i].Reactions != nil {

@@ -26,12 +26,10 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 			return
 		}
 	}
-	messagesToDelete := []types.Message{}
-	for i := range messages {
-		if !messages[i].Pinned && (messages[i].Status == nil || *messages[i].Status != "THREAD_FIRST_MESSAGE") {
-			messagesToDelete = append(messagesToDelete, messages[i])
-		}
-	}
+
+	messagesToDelete := utils.Filter(messages, func(message types.Message) bool {
+		return !message.Pinned && (message.Status == nil || *message.Status != "THREAD_FIRST_MESSAGE")
+	})
 	if len(messagesToDelete) == 0 {
 		deleter.Sdk.Log(fmt.Sprintf("No message to delete in channel %s", channelId), utils.INFO)
 		return
@@ -40,10 +38,7 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 	channel := deleter.Sdk.GetChannel(channelId, authorizationToken)
 	if channel.ThreadMetadata != nil {
 		if channel.ThreadMetadata.Locked {
-			var messageIds []types.Snowflake
-			for i := range messagesToDelete {
-				messageIds = append(messageIds, messagesToDelete[i].Id)
-			}
+			messageIds := utils.Map(messagesToDelete, func(message types.Message) types.Snowflake { return message.Id })
 			deleter.Sdk.Repo.UpdateMultipleMessageStatus(messageIds, "ERROR")
 			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d messages to delete", channelId, len(messageIds)), utils.ERROR)
 			return

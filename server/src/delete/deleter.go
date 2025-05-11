@@ -32,8 +32,18 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 	}
 
 	channel := deleter.Sdk.GetChannel(channelId, authorizationToken)
-	if channel.ThreadMetadata != nil && channel.ThreadMetadata.Archived {
-		deleter.Sdk.UnarchiveThread(authorizationToken, channelId)
+	if channel.ThreadMetadata != nil {
+		if channel.ThreadMetadata.Locked {
+			var messageIds []types.Snowflake
+			for i := range messages {
+				messageIds = append(messageIds, messages[i].Id)
+			}
+			deleter.Sdk.Repo.UpdateMultipleMessageStatus(messageIds, "ERROR")
+			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d messages to delete", channelId, len(messageIds)), utils.ERROR)
+			return
+		} else if channel.ThreadMetadata.Archived {
+			deleter.Sdk.UnarchiveThread(authorizationToken, channelId)
+		}
 	}
 
 	var deletedMessageIds []types.Snowflake

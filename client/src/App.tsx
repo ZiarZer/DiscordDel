@@ -224,6 +224,18 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, currentUser]
   );
+  const sendDeleteChannelDataRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'DELETE_CHANNEL_DATA',
+        body: {
+          authorizationToken,
+          authorIds: [currentUser?.id],
+          channelId: loadedChannel?.id,
+        },
+      }),
+    [sendJsonMessage, authorizationToken, currentUser, loadedChannel]
+  );
 
   const userSectionActions = [
     { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
@@ -235,6 +247,7 @@ function App() {
   ];
   const channelSectionActions = [
     { label: 'Crawl channel', onClick: sendCrawlChannelRequest },
+    { label: 'Delete channel crawled data', onClick: sendDeleteChannelDataRequest },
   ];
 
   return (

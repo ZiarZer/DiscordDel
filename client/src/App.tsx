@@ -236,14 +236,39 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, currentUser, loadedChannel]
   );
+  const sendDeleteGuildDataRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'DELETE_GUILD_DATA',
+        body: {
+          authorizationToken,
+          authorIds: [currentUser?.id],
+          channelId: loadedGuild?.id,
+        },
+      }),
+    [sendJsonMessage, authorizationToken, currentUser, loadedGuild]
+  );
+  const sendDeleteAllDataRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'DELETE_ALL_DATA',
+        body: {
+          authorizationToken,
+          authorIds: [currentUser?.id],
+        },
+      }),
+    [sendJsonMessage, authorizationToken, currentUser]
+  );
 
   const userSectionActions = [
     { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
     { label: 'Crawl all guilds', onClick: sendCrawlAllGuildsRequest },
+    { label: 'Delete all crawled data', onClick: sendDeleteAllDataRequest },
   ];
   const guildSectionActions = [
     { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
     { label: 'Crawl guild', onClick: sendCrawlGuildRequest },
+    { label: 'Delete guild crawled data', onClick: sendDeleteGuildDataRequest },
   ];
   const channelSectionActions = [
     { label: 'Crawl channel', onClick: sendCrawlChannelRequest },

@@ -12,9 +12,9 @@ const Wrapper = styled.div<{ $backgroundColor: string; $color: string }>`
   left: 0;
   width: 100%;
   padding: 0.25em;
+  color: white;
   background-color: ${({ $backgroundColor }: { $backgroundColor: string }) =>
     $backgroundColor};
-  color: ${({ $color }: { $color: string }) => $color};
 `;
 
 export function WebsocketReconnectBanner({
@@ -24,16 +24,20 @@ export function WebsocketReconnectBanner({
   readyState: ReadyState;
   retry: () => void;
 }) {
-  const isDisconnected = [
-    ReadyState.UNINSTANTIATED,
-    ReadyState.CLOSED,
-  ].includes(readyState);
-  return (
-    isDisconnected && (
-      <Wrapper $backgroundColor='#aa0000' $color='#ffffff'>
+  if ([ReadyState.UNINSTANTIATED, ReadyState.CLOSED].includes(readyState)) {
+    return (
+      <Wrapper $backgroundColor="#aa0000">
         Websocket disconnected
         <Button onClick={retry}>Try reconnecting</Button>
       </Wrapper>
-    )
-  );
+    );
+  } else if (readyState === ReadyState.CONNECTING) {
+    return (
+      <Wrapper $backgroundColor="#ff8000">
+        Websocket connecting
+        <Button disabled>Try reconnecting</Button>
+      </Wrapper>
+    );
+  }
+  return null;
 }

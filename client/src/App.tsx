@@ -6,8 +6,10 @@ import { version } from '../package.json';
 import { Console } from './components/Console';
 import { PaginatedList } from './components/PaginatedList';
 import { Section } from './components/Section';
+import { WebsocketReconnectBanner } from './components/WebsocketReconnectBanner';
 import { CHANNEL_TYPES } from './constants';
 import { Channel, Guild, InfoListFieldConfig, LogEntry, User } from './types';
+import { WebSocketLike } from 'react-use-websocket/dist/lib/types';
 
 const Wrapper = styled.div`
   display: flex;
@@ -69,6 +71,7 @@ const getGuildIconUrl = (guild: Guild | null) =>
     : undefined;
 
 function App() {
+  let manualReconnects = 0;
   const { sendJsonMessage, lastMessage, lastJsonMessage, readyState } =
     useWebSocket(WEBSOCKET_URL, {
       share: false,
@@ -147,6 +150,7 @@ function App() {
     Array<Guild> | Array<Channel> | null
   >(null);
   const [isChannelType, setIsChannelType] = useState(false);
+  const [websocketServerUrl, setWebsocketServerUrl] = useState(WEBSOCKET_URL);
 
   const sendLoginRequest = useCallback(
     () =>
@@ -277,6 +281,14 @@ function App() {
 
   return (
     <>
+      <WebsocketReconnectBanner
+        readyState={readyState}
+        retry={() =>
+          setWebsocketServerUrl(
+            `${WEBSOCKET_URL}?retries=${manualReconnects++}`
+          )
+        }
+      />
       <Wrapper>
         <LeftPanel>
           <Section

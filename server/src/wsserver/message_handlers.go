@@ -2,6 +2,7 @@ package wsserver
 
 import (
 	"encoding/json"
+	"sync"
 
 	"github.com/ZiarZer/DiscordDel/delete"
 	"github.com/ZiarZer/DiscordDel/types"
@@ -98,8 +99,11 @@ func handleMessage(conn *websocket.Conn) error {
 }
 
 var currentAction bool
+var currentActionMutex sync.Mutex
 
 func startAction() bool {
+	currentActionMutex.Lock()
+	defer currentActionMutex.Unlock()
 	if currentAction {
 		sdk.Log("An action is already running", utils.ERROR)
 		return false

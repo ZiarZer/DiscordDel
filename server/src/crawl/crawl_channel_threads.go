@@ -10,7 +10,7 @@ import (
 )
 
 func (crawler *Crawler) crawlChannelThreads(authorizationToken string, mainChannel *types.Channel, crawlingInfo *types.CrawlingInfo) {
-	defer actions.StartAction(fmt.Sprintf("Crawl threads in channel %s", mainChannel.Id), crawler.Sdk.Log).EndAction()
+	defer actions.StartAction(fmt.Sprintf("Crawl threads in channel %s", mainChannel.Id), crawler.Sdk.Log, true).EndAction()
 	pageSize := 25
 	options := discord.SearchChannelThreadsOptions{
 		SortBy:    utils.MakePointer("creation_time"),

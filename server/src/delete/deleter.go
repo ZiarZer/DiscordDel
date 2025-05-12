@@ -19,12 +19,11 @@ type DeleteOptions struct {
 }
 
 func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
-	defer actions.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log).EndAction()
+	defer actions.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true).EndAction()
 	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId, options)
 }
 
 func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
-	defer actions.StartAction(fmt.Sprintf("Delete crawled messages of channel %s", channelId), deleter.Sdk.TempLog).EndAction()
 	messages, err := deleter.Sdk.Repo.GetMessagesByChannelId(channelId, authorIds)
 	if err != nil {
 		if messages != nil {

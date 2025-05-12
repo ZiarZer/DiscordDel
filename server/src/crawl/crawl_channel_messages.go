@@ -11,7 +11,7 @@ import (
 )
 
 func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel *types.Channel, authorIds []types.Snowflake, crawlingInfo *types.CrawlingInfo) {
-	defer actions.StartAction(fmt.Sprintf("Crawl messages in channel %s", channel.Id), crawler.Sdk.TempLog).EndAction()
+	defer actions.StartAction(fmt.Sprintf("Crawl messages in channel %s", channel.Id), crawler.Sdk.TempLog, false).EndAction()
 	if channel.Type == types.PublicThread || channel.Type == types.PrivateThread {
 		parentChannel := crawler.Sdk.GetChannel(*channel.ParentId, authorizationToken)
 		if parentChannel.Type == types.GuildForum {

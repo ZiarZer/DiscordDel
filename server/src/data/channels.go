@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -92,4 +93,37 @@ func (repo *Repository) GetChannelChildrenCount(parentChannelId types.Snowflake)
 		return 0, err
 	}
 	return count, nil
+}
+
+func (repo *Repository) GetChannelsWithPendingMessages(authorIds []types.Snowflake, guildId *types.Snowflake) ([]types.Snowflake, error) {
+	query := "SELECT DISTINCT `channel_id` FROM `messages` WHERE `status` = 'PENDING'"
+	var rows *sql.Rows
+	var err error
+	if guildId != nil {
+		query += " AND `guild_id` = ?"
+		stmt, err := repo.db.Prepare(query)
+		if err != nil {
+			utils.InternalLog("Failed to prepare getting guild channels with PENDING messages", utils.ERROR)
+			return nil, err
+		}
+		rows, err = stmt.Query(guildId)
+	} else {
+		rows, err = repo.db.Query(query)
+	}
+
+	if err != nil {
+		utils.InternalLog("Failed to get channels with PENDING messages", utils.ERROR)
+		return nil, err
+	}
+	defer rows.Close()
+	var channelIds []types.Snowflake
+	for rows.Next() {
+		var channelId types.Snowflake
+		err := rows.Scan(&channelId)
+		channelIds = append(channelIds, channelId)
+		if err != nil {
+			return channelIds, err
+		}
+	}
+	return channelIds, nil
 }

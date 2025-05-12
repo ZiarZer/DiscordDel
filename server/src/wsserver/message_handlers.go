@@ -62,6 +62,19 @@ type DeleteChannelDataRequestBody struct {
 	Options            delete.DeleteOptions `json:"options"`
 }
 
+type DeleteGuildDataRequestBody struct {
+	AuthorizationToken string               `json:"authorizationToken"`
+	AuthorIds          []types.Snowflake    `json:"authorIds"`
+	GuildId            types.Snowflake      `json:"guildId"`
+	Options            delete.DeleteOptions `json:"options"`
+}
+
+type DeleteAllDataRequestBody struct {
+	AuthorizationToken string               `json:"authorizationToken"`
+	AuthorIds          []types.Snowflake    `json:"authorIds"`
+	Options            delete.DeleteOptions `json:"options"`
+}
+
 var bodyConstructors = map[string]func() RequestBody{
 	"LOGIN":               func() RequestBody { return &LoginRequestBody{} },
 	"GET_USER_GUILDS":     func() RequestBody { return &GetUserGuildsRequestBody{} },
@@ -72,6 +85,8 @@ var bodyConstructors = map[string]func() RequestBody{
 	"CRAWL_GUILD":         func() RequestBody { return &CrawlGuildRequestBody{} },
 	"CRAWL_ALL_GUILDS":    func() RequestBody { return &CrawlAllGuildsRequestBody{} },
 	"DELETE_CHANNEL_DATA": func() RequestBody { return &DeleteChannelDataRequestBody{} },
+	"DELETE_GUILD_DATA":   func() RequestBody { return &DeleteGuildDataRequestBody{} },
+	"DELETE_ALL_DATA":     func() RequestBody { return &DeleteAllDataRequestBody{} },
 }
 
 func handleMessage(conn *websocket.Conn) error {
@@ -196,5 +211,23 @@ func (body *DeleteChannelDataRequestBody) handle(conn *websocket.Conn) error {
 	}
 	defer endAction()
 	deleter.DeleteChannelCrawledData(body.AuthorizationToken, body.AuthorIds, body.ChannelId, body.Options)
+	return nil
+}
+
+func (body *DeleteGuildDataRequestBody) handle(conn *websocket.Conn) error {
+	if !startAction() {
+		return nil
+	}
+	defer endAction()
+	deleter.BulkDeleteCrawledData(body.AuthorizationToken, body.AuthorIds, &body.GuildId, body.Options)
+	return nil
+}
+
+func (body *DeleteAllDataRequestBody) handle(conn *websocket.Conn) error {
+	if !startAction() {
+		return nil
+	}
+	defer endAction()
+	deleter.BulkDeleteCrawledData(body.AuthorizationToken, body.AuthorIds, nil, body.Options)
 	return nil
 }

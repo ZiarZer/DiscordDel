@@ -18,6 +18,26 @@ type DeleteOptions struct {
 	DeleteThreadFirstMessage bool
 }
 
+func (deleter *Deleter) BulkDeleteCrawledData(authorizationToken string, authorIds []types.Snowflake, guildId *types.Snowflake, options DeleteOptions) {
+	if guildId == nil {
+		defer actions.StartAction("Delete all crawled data", deleter.Sdk.Log, true).EndAction()
+	} else {
+		defer actions.StartAction(fmt.Sprintf("Delete crawled data of guild %s", *guildId), deleter.Sdk.Log, true).EndAction()
+	}
+	channelIds, err := deleter.Sdk.Repo.GetChannelsWithPendingMessages(authorIds, guildId)
+	if err != nil {
+		if channelIds != nil {
+			utils.InternalLog(err.Error(), utils.WARNING)
+		} else {
+			utils.InternalLog(err.Error(), utils.ERROR)
+			return
+		}
+	}
+	for i := range channelIds {
+		deleter.DeleteChannelCrawledData(authorizationToken, authorIds, channelIds[i], options)
+	}
+}
+
 func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
 	defer actions.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true).EndAction()
 	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId, options)
@@ -52,7 +72,7 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 	if channel.ThreadMetadata != nil {
 		if channel.ThreadMetadata.Locked {
 			messageIds := utils.Map(messagesToDelete, func(message types.Message) types.Snowflake { return message.Id })
-			deleter.Sdk.Repo.UpdateMultipleMessageStatus(messageIds, "ERROR")
+			deleter.Sdk.Repo.UpdateMessagesStatus(messageIds, "ERROR")
 			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d messages to delete", channelId, len(messageIds)), utils.ERROR)
 			return
 		} else if channel.ThreadMetadata.Archived {
@@ -60,21 +80,15 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 		}
 	}
 
-	var deletedMessageIds []types.Snowflake
-	var failedToDeleteMessageIds []types.Snowflake
-
 	for i := range messagesToDelete {
 		success := deleter.Sdk.DeleteMessage(authorizationToken, channelId, messagesToDelete[i].Id)
 		if success {
-			deletedMessageIds = append(deletedMessageIds, messagesToDelete[i].Id)
+			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "DELETED")
 			if len(messagesToDelete[i].Content) > 0 {
 				deleter.Sdk.Log(messagesToDelete[i].Content, nil)
 			}
 		} else {
-			failedToDeleteMessageIds = append(failedToDeleteMessageIds, messagesToDelete[i].Id)
+			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "ERROR")
 		}
 	}
-
-	deleter.Sdk.Repo.UpdateMultipleMessageStatus(deletedMessageIds, "DELETED")
-	deleter.Sdk.Repo.UpdateMultipleMessageStatus(failedToDeleteMessageIds, "ERROR")
 }

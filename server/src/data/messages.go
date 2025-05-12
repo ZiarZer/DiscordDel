@@ -102,7 +102,7 @@ func (repo *Repository) GetMessagesByChannelId(channelId types.Snowflake, author
 	return messages, nil
 }
 
-func (repo *Repository) UpdateMultipleMessageStatus(messageIds []types.Snowflake, updatedStatus string) error {
+func (repo *Repository) UpdateMessagesStatus(messageIds []types.Snowflake, updatedStatus string) error {
 	if len(messageIds) == 0 {
 		return nil
 	}

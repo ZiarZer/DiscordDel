@@ -93,9 +93,21 @@ func handleMessage(conn *websocket.Conn) error {
 		utils.InternalLog("Failed to read Websocket message's body", utils.FATAL)
 		return err
 	}
-	body.handle(conn)
+	go body.handle(conn)
 	return nil
 }
+
+var currentAction bool
+
+func startAction() bool {
+	if currentAction {
+		sdk.Log("An action is already running", utils.ERROR)
+		return false
+	}
+	currentAction = true
+	return true
+}
+func endAction() { currentAction = false }
 
 func (body *LoginRequestBody) handle(conn *websocket.Conn) error {
 	user := sdk.Login(body.AuthorizationToken)
@@ -148,21 +160,37 @@ func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
 }
 
 func (body *CrawlChannelRequestBody) handle(conn *websocket.Conn) error {
+	if !startAction() {
+		return nil
+	}
+	defer endAction()
 	crawler.CrawlChannel(body.AuthorizationToken, body.AuthorIds, body.ChannelId)
 	return nil
 }
 
 func (body *CrawlGuildRequestBody) handle(conn *websocket.Conn) error {
+	if !startAction() {
+		return nil
+	}
+	defer endAction()
 	crawler.CrawlGuild(body.AuthorizationToken, body.AuthorIds, body.GuildId)
 	return nil
 }
 
 func (body *CrawlAllGuildsRequestBody) handle(conn *websocket.Conn) error {
+	if !startAction() {
+		return nil
+	}
+	defer endAction()
 	crawler.CrawlAllGuilds(body.AuthorizationToken, body.AuthorIds)
 	return nil
 }
 
 func (body *DeleteChannelDataRequestBody) handle(conn *websocket.Conn) error {
+	if !startAction() {
+		return nil
+	}
+	defer endAction()
 	deleter.DeleteChannelCrawledData(body.AuthorizationToken, body.AuthorIds, body.ChannelId, body.Options)
 	return nil
 }

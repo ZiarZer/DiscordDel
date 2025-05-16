@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) crawlMessageReactions(authorizationToken string, message *types.Message, authorIds []types.Snowflake) {
-	defer actions.StartAction(fmt.Sprintf("Crawl reactions on message %s", message.Id), crawler.Sdk.TempLog, false).EndAction()
+	defer crawler.ActionLogger.EndAction(
+		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl reactions on message %s", message.Id), crawler.Sdk.TempLog, false, false),
+	)
 	if message.Reactions == nil {
 		return
 	}
@@ -32,7 +33,9 @@ func (crawler *Crawler) crawlMessageReactions(authorizationToken string, message
 }
 
 func (crawler *Crawler) crawlReactionsOnEmoji(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, authorIds []types.Snowflake) {
-	defer actions.StartAction(fmt.Sprintf("Crawl reactions with %s on message %s", emoji, messageId), crawler.Sdk.TempLog, false).EndAction()
+	defer crawler.ActionLogger.EndAction(
+		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl reactions with %s on message %s", emoji, messageId), crawler.Sdk.TempLog, false, false),
+	)
 	usersReacted := crawler.fetchReactionsOnEmoji(authorizationToken, channelId, messageId, emoji, isBurst, nil, authorIds)
 	pageSize := 100
 	options := &discord.GetMessageReactionsOptions{Limit: &pageSize}

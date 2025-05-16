@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/crawl"
 	"github.com/ZiarZer/DiscordDel/data"
 	"github.com/ZiarZer/DiscordDel/delete"
@@ -39,12 +40,14 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 var sdk discord.DiscordSdk
 var crawler crawl.Crawler
 var deleter delete.Deleter
+var actionLogger actions.ActionLogger
 
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
 	sdk = discord.DiscordSdk{Repo: data.NewRepository(), ApiClient: &discord.ApiClient{Delay: 700}}
-	crawler = crawl.Crawler{Sdk: &sdk}
-	deleter = delete.Deleter{Sdk: &sdk}
+	actionLogger = actions.ActionLogger{Repo: sdk.Repo}
+	crawler = crawl.Crawler{Sdk: &sdk, ActionLogger: &actionLogger}
+	deleter = delete.Deleter{Sdk: &sdk, ActionLogger: &actionLogger}
 	utils.InternalLog(fmt.Sprintf("Websocket server started: ws://localhost:%d", port), utils.INFO)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

@@ -10,7 +10,8 @@ import (
 )
 
 type Crawler struct {
-	Sdk *discord.DiscordSdk
+	Sdk          *discord.DiscordSdk
+	ActionLogger *actions.ActionLogger
 }
 
 func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake) {
@@ -25,7 +26,9 @@ func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []type
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get crawling info for channel %s", channelId), utils.WARNING)
 	}
 
-	defer actions.StartAction(fmt.Sprintf("Crawl channel %s", channelId), crawler.Sdk.Log, true).EndAction()
+	defer crawler.ActionLogger.EndAction(
+		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl channel %s", channelId), crawler.Sdk.Log, true, true),
+	)
 	if channel.Type == types.GuildForum {
 		crawler.crawlChannelThreads(authorizationToken, channel, crawlingInfo)
 	} else {

@@ -10,7 +10,8 @@ import (
 )
 
 type Deleter struct {
-	Sdk *discord.DiscordSdk
+	Sdk          *discord.DiscordSdk
+	ActionLogger *actions.ActionLogger
 }
 
 type DeleteOptions struct {
@@ -19,11 +20,13 @@ type DeleteOptions struct {
 }
 
 func (deleter *Deleter) BulkDeleteCrawledData(authorizationToken string, authorIds []types.Snowflake, guildId *types.Snowflake, options DeleteOptions) {
+	var action *actions.Action
 	if guildId == nil {
-		defer actions.StartAction("Delete all crawled data", deleter.Sdk.Log, true).EndAction()
+		action = deleter.ActionLogger.StartAction("Delete all crawled data", deleter.Sdk.Log, true, true)
 	} else {
-		defer actions.StartAction(fmt.Sprintf("Delete crawled data of guild %s", *guildId), deleter.Sdk.Log, true).EndAction()
+		action = deleter.ActionLogger.StartAction(fmt.Sprintf("Delete crawled data of guild %s", *guildId), deleter.Sdk.Log, true, true)
 	}
+	defer deleter.ActionLogger.EndAction(action)
 	channelIds, err := deleter.Sdk.Repo.GetChannelsWithPendingMessages(authorIds, guildId)
 	if err != nil {
 		if channelIds != nil {
@@ -39,7 +42,9 @@ func (deleter *Deleter) BulkDeleteCrawledData(authorizationToken string, authorI
 }
 
 func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
-	defer actions.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true).EndAction()
+	defer deleter.ActionLogger.EndAction(
+		deleter.ActionLogger.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true, true),
+	)
 	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId, options)
 }
 

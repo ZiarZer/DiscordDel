@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,8 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) GetGuild(guildId types.Snowflake, authorizationToken string) *types.Guild {
-	resp, err := sdk.ApiClient.getGuildById(guildId, authorizationToken)
+func (sdk *DiscordSdk) GetGuild(ctx context.Context, guildId types.Snowflake) *types.Guild {
+	resp, err := sdk.ApiClient.getGuildById(ctx, guildId)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -31,8 +32,8 @@ func (sdk *DiscordSdk) GetGuild(guildId types.Snowflake, authorizationToken stri
 	return &guild
 }
 
-func (sdk *DiscordSdk) GetGuildChannels(guildId types.Snowflake, authorizationToken string) []types.Channel {
-	resp, err := sdk.ApiClient.getGuildChannels(guildId, authorizationToken)
+func (sdk *DiscordSdk) GetGuildChannels(ctx context.Context, guildId types.Snowflake) []types.Channel {
+	resp, err := sdk.ApiClient.getGuildChannels(ctx, guildId)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil

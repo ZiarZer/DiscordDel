@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,8 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) GetChannel(channelId types.Snowflake, authorizationToken string) *types.Channel {
-	resp, err := sdk.ApiClient.getChannelById(channelId, authorizationToken)
+func (sdk *DiscordSdk) GetChannel(ctx context.Context, channelId types.Snowflake) *types.Channel {
+	resp, err := sdk.ApiClient.getChannelById(ctx, channelId)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -31,8 +32,8 @@ func (sdk *DiscordSdk) GetChannel(channelId types.Snowflake, authorizationToken 
 	return &channel
 }
 
-func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId types.Snowflake, options *GetChannelMessagesOptions) []types.Message {
-	resp, err := sdk.ApiClient.getChannelMessages(channelId, options, authorizationToken)
+func (sdk *DiscordSdk) GetChannelMessages(ctx context.Context, channelId types.Snowflake, options *GetChannelMessagesOptions) []types.Message {
+	resp, err := sdk.ApiClient.getChannelMessages(ctx, channelId, options)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -52,8 +53,8 @@ func (sdk *DiscordSdk) GetChannelMessages(authorizationToken string, channelId t
 	return messages
 }
 
-func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChannelId types.Snowflake, options *SearchChannelThreadsOptions) []types.Channel {
-	resp, err := sdk.ApiClient.searchChannelThreads(authorizationToken, mainChannelId, options)
+func (sdk *DiscordSdk) SearchChannelThreads(ctx context.Context, mainChannelId types.Snowflake, options *SearchChannelThreadsOptions) []types.Channel {
+	resp, err := sdk.ApiClient.searchChannelThreads(ctx, mainChannelId, options)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -74,8 +75,8 @@ func (sdk *DiscordSdk) SearchChannelThreads(authorizationToken string, mainChann
 	return result.Threads
 }
 
-func (sdk *DiscordSdk) GetThreadsData(authorizationToken string, mainChannelId types.Snowflake, threadIds []types.Snowflake) *types.ThreadsDataResult {
-	resp, err := sdk.ApiClient.getThreadsData(authorizationToken, mainChannelId, threadIds)
+func (sdk *DiscordSdk) GetThreadsData(ctx context.Context, mainChannelId types.Snowflake, threadIds []types.Snowflake) *types.ThreadsDataResult {
+	resp, err := sdk.ApiClient.getThreadsData(ctx, mainChannelId, threadIds)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -96,8 +97,8 @@ func (sdk *DiscordSdk) GetThreadsData(authorizationToken string, mainChannelId t
 	return &result
 }
 
-func (sdk *DiscordSdk) UnarchiveThread(authorizationToken string, threadId types.Snowflake) bool {
-	resp, err := sdk.ApiClient.modifyChannel(authorizationToken, threadId, ModifyChannelBody{Archived: utils.MakePointer(false)})
+func (sdk *DiscordSdk) UnarchiveThread(ctx context.Context, threadId types.Snowflake) bool {
+	resp, err := sdk.ApiClient.modifyChannel(ctx, threadId, ModifyChannelBody{Archived: utils.MakePointer(false)})
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return false

@@ -1,6 +1,7 @@
 package wsserver
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -28,8 +29,9 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 	sdk.Log("Connected to client via WebSocket", utils.INFO)
 	defer conn.Close()
 
+	ctx := context.Background()
 	for {
-		err := handleMessage(conn)
+		err := handleMessage(ctx, conn)
 		if err != nil {
 			utils.InternalLog("Closing server WebSocket", utils.INFO)
 			return

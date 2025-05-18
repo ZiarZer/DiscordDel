@@ -1,6 +1,7 @@
 package wsserver
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 
@@ -11,8 +12,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+func makeAuthorizationTokenContext(parentCtx context.Context, authorizationToken string) context.Context {
+	return context.WithValue(parentCtx, types.CtxKey{Key: "authorizationToken"}, authorizationToken)
+}
+
 type RequestBody interface {
-	handle(conn *websocket.Conn) error
+	handle(ctx context.Context, conn *websocket.Conn) error
 }
 
 type LoginRequestBody struct {
@@ -89,7 +94,7 @@ var bodyConstructors = map[string]func() RequestBody{
 	"DELETE_ALL_DATA":     func() RequestBody { return &DeleteAllDataRequestBody{} },
 }
 
-func handleMessage(conn *websocket.Conn) error {
+func handleMessage(ctx context.Context, conn *websocket.Conn) error {
 	_, stringMessage, err := conn.ReadMessage()
 	if err != nil {
 		utils.InternalLog("Client disconnected", utils.INFO)
@@ -109,7 +114,7 @@ func handleMessage(conn *websocket.Conn) error {
 		utils.InternalLog("Failed to read Websocket message's body", utils.FATAL)
 		return err
 	}
-	go body.handle(conn)
+	go body.handle(context.Context(ctx), conn)
 	return nil
 }
 
@@ -128,8 +133,8 @@ func startAction() bool {
 }
 func endAction() { currentAction = false }
 
-func (body *LoginRequestBody) handle(conn *websocket.Conn) error {
-	user := sdk.Login(body.AuthorizationToken)
+func (body *LoginRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
+	user := sdk.Login(makeAuthorizationTokenContext(ctx, body.AuthorizationToken))
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
 		utils.InternalLog("Failed to serialize user info", utils.ERROR)
@@ -138,8 +143,8 @@ func (body *LoginRequestBody) handle(conn *websocket.Conn) error {
 	return wsbase.SendMessageToClient(conn, "LOGIN", jsonUser)
 }
 
-func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
-	guild := sdk.GetGuild(body.GuildId, body.AuthorizationToken)
+func (body *GetGuildRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
+	guild := sdk.GetGuild(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.GuildId)
 	jsonGuild, err := json.Marshal(guild)
 	if err != nil {
 		utils.InternalLog("Failed to serialize guild info", utils.ERROR)
@@ -148,8 +153,8 @@ func (body *GetGuildRequestBody) handle(conn *websocket.Conn) error {
 	return wsbase.SendMessageToClient(conn, "GET_GUILD", jsonGuild)
 }
 
-func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
-	channel := sdk.GetChannel(body.ChannelId, body.AuthorizationToken)
+func (body *GetChannelRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
+	channel := sdk.GetChannel(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.ChannelId)
 	jsonChannel, err := json.Marshal(channel)
 	if err != nil {
 		utils.InternalLog("Failed to serialize channel info", utils.ERROR)
@@ -158,8 +163,8 @@ func (body *GetChannelRequestBody) handle(conn *websocket.Conn) error {
 	return wsbase.SendMessageToClient(conn, "GET_CHANNEL", jsonChannel)
 }
 
-func (body *GetUserGuildsRequestBody) handle(conn *websocket.Conn) error {
-	guilds := sdk.GetUserGuilds(body.AuthorizationToken)
+func (body *GetUserGuildsRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
+	guilds := sdk.GetUserGuilds(makeAuthorizationTokenContext(ctx, body.AuthorizationToken))
 	jsonGuildList, err := json.Marshal(guilds)
 	if err != nil {
 		utils.InternalLog("Failed to serialize guilds list", utils.ERROR)
@@ -168,8 +173,8 @@ func (body *GetUserGuildsRequestBody) handle(conn *websocket.Conn) error {
 	return wsbase.SendMessageToClient(conn, "GET_USER_GUILDS", jsonGuildList)
 }
 
-func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
-	channels := sdk.GetGuildChannels(body.GuildId, body.AuthorizationToken)
+func (body *GetGuildChannelsRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
+	channels := sdk.GetGuildChannels(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.GuildId)
 	jsonChannelList, err := json.Marshal(channels)
 	if err != nil {
 		utils.InternalLog("Failed to serialize channels list", utils.ERROR)
@@ -178,56 +183,57 @@ func (body *GetGuildChannelsRequestBody) handle(conn *websocket.Conn) error {
 	return wsbase.SendMessageToClient(conn, "GET_GUILD_CHANNELS", jsonChannelList)
 }
 
-func (body *CrawlChannelRequestBody) handle(conn *websocket.Conn) error {
+func (body *CrawlChannelRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if !startAction() {
 		return nil
 	}
 	defer endAction()
-	crawler.CrawlChannel(body.AuthorizationToken, body.AuthorIds, body.ChannelId)
+
+	crawler.CrawlChannel(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.AuthorIds, body.ChannelId)
 	return nil
 }
 
-func (body *CrawlGuildRequestBody) handle(conn *websocket.Conn) error {
+func (body *CrawlGuildRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if !startAction() {
 		return nil
 	}
 	defer endAction()
-	crawler.CrawlGuild(body.AuthorizationToken, body.AuthorIds, body.GuildId)
+	crawler.CrawlGuild(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.AuthorIds, body.GuildId)
 	return nil
 }
 
-func (body *CrawlAllGuildsRequestBody) handle(conn *websocket.Conn) error {
+func (body *CrawlAllGuildsRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if !startAction() {
 		return nil
 	}
 	defer endAction()
-	crawler.CrawlAllGuilds(body.AuthorizationToken, body.AuthorIds)
+	crawler.CrawlAllGuilds(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.AuthorIds)
 	return nil
 }
 
-func (body *DeleteChannelDataRequestBody) handle(conn *websocket.Conn) error {
+func (body *DeleteChannelDataRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if !startAction() {
 		return nil
 	}
 	defer endAction()
-	deleter.DeleteChannelCrawledData(body.AuthorizationToken, body.AuthorIds, body.ChannelId, body.Options)
+	deleter.DeleteChannelCrawledData(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.AuthorIds, body.ChannelId, body.Options)
 	return nil
 }
 
-func (body *DeleteGuildDataRequestBody) handle(conn *websocket.Conn) error {
+func (body *DeleteGuildDataRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if !startAction() {
 		return nil
 	}
 	defer endAction()
-	deleter.BulkDeleteCrawledData(body.AuthorizationToken, body.AuthorIds, &body.GuildId, body.Options)
+	deleter.BulkDeleteCrawledData(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.AuthorIds, &body.GuildId, body.Options)
 	return nil
 }
 
-func (body *DeleteAllDataRequestBody) handle(conn *websocket.Conn) error {
+func (body *DeleteAllDataRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if !startAction() {
 		return nil
 	}
 	defer endAction()
-	deleter.BulkDeleteCrawledData(body.AuthorizationToken, body.AuthorIds, nil, body.Options)
+	deleter.BulkDeleteCrawledData(makeAuthorizationTokenContext(ctx, body.AuthorizationToken), body.AuthorIds, nil, body.Options)
 	return nil
 }

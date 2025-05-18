@@ -1,6 +1,7 @@
 package crawl
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ZiarZer/DiscordDel/actions"
@@ -14,8 +15,8 @@ type Crawler struct {
 	ActionLogger *actions.ActionLogger
 }
 
-func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake) {
-	channel := crawler.Sdk.GetChannel(channelId, authorizationToken)
+func (crawler *Crawler) CrawlChannel(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake) {
+	channel := crawler.Sdk.GetChannel(ctx, channelId)
 	if channel == nil {
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get channel %s", channelId), utils.ERROR)
 		return
@@ -30,8 +31,8 @@ func (crawler *Crawler) CrawlChannel(authorizationToken string, authorIds []type
 		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl channel %s", channelId), crawler.Sdk.Log, true, true),
 	)
 	if channel.Type == types.GuildForum {
-		crawler.crawlChannelThreads(authorizationToken, channel, crawlingInfo)
+		crawler.crawlChannelThreads(ctx, channel, crawlingInfo)
 	} else {
-		crawler.crawlChannelMessages(authorizationToken, channel, authorIds, crawlingInfo)
+		crawler.crawlChannelMessages(ctx, channel, authorIds, crawlingInfo)
 	}
 }

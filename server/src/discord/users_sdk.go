@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,8 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) Login(authorizationToken string) *types.User {
-	resp, err := sdk.ApiClient.login(authorizationToken)
+func (sdk *DiscordSdk) Login(ctx context.Context) *types.User {
+	resp, err := sdk.ApiClient.login(ctx)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -30,8 +31,8 @@ func (sdk *DiscordSdk) Login(authorizationToken string) *types.User {
 	return &loggedUser
 }
 
-func (sdk *DiscordSdk) GetUserGuilds(authorizationToken string) []types.Guild {
-	resp, err := sdk.ApiClient.getUserGuilds(authorizationToken)
+func (sdk *DiscordSdk) GetUserGuilds(ctx context.Context) []types.Guild {
+	resp, err := sdk.ApiClient.getUserGuilds(ctx)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil

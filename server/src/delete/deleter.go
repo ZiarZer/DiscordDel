@@ -1,6 +1,7 @@
 package delete
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ZiarZer/DiscordDel/actions"
@@ -19,7 +20,7 @@ type DeleteOptions struct {
 	DeleteThreadFirstMessage bool
 }
 
-func (deleter *Deleter) BulkDeleteCrawledData(authorizationToken string, authorIds []types.Snowflake, guildId *types.Snowflake, options DeleteOptions) {
+func (deleter *Deleter) BulkDeleteCrawledData(ctx context.Context, authorIds []types.Snowflake, guildId *types.Snowflake, options DeleteOptions) {
 	var action *actions.Action
 	if guildId == nil {
 		action = deleter.ActionLogger.StartAction("Delete all crawled data", deleter.Sdk.Log, true, true)
@@ -37,18 +38,18 @@ func (deleter *Deleter) BulkDeleteCrawledData(authorizationToken string, authorI
 		}
 	}
 	for i := range channelIds {
-		deleter.DeleteChannelCrawledData(authorizationToken, authorIds, channelIds[i], options)
+		deleter.DeleteChannelCrawledData(ctx, authorIds, channelIds[i], options)
 	}
 }
 
-func (deleter *Deleter) DeleteChannelCrawledData(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
+func (deleter *Deleter) DeleteChannelCrawledData(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
 	defer deleter.ActionLogger.EndAction(
 		deleter.ActionLogger.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true, true),
 	)
-	deleter.deleteChannelCrawledMessages(authorizationToken, authorIds, channelId, options)
+	deleter.deleteChannelCrawledMessages(ctx, authorIds, channelId, options)
 }
 
-func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
+func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
 	messages, err := deleter.Sdk.Repo.GetMessagesByChannelId(channelId, authorIds)
 	if err != nil {
 		if messages != nil {
@@ -73,7 +74,7 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 		return
 	}
 
-	channel := deleter.Sdk.GetChannel(channelId, authorizationToken)
+	channel := deleter.Sdk.GetChannel(ctx, channelId)
 	if channel.ThreadMetadata != nil {
 		if channel.ThreadMetadata.Locked {
 			messageIds := utils.Map(messagesToDelete, func(message types.Message) types.Snowflake { return message.Id })
@@ -81,12 +82,12 @@ func (deleter *Deleter) deleteChannelCrawledMessages(authorizationToken string, 
 			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d messages to delete", channelId, len(messageIds)), utils.ERROR)
 			return
 		} else if channel.ThreadMetadata.Archived {
-			deleter.Sdk.UnarchiveThread(authorizationToken, channelId)
+			deleter.Sdk.UnarchiveThread(ctx, channelId)
 		}
 	}
 
 	for i := range messagesToDelete {
-		success := deleter.Sdk.DeleteMessage(authorizationToken, channelId, messagesToDelete[i].Id)
+		success := deleter.Sdk.DeleteMessage(ctx, channelId, messagesToDelete[i].Id)
 		if success {
 			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "DELETED")
 			if len(messagesToDelete[i].Content) > 0 {

@@ -1,6 +1,7 @@
 package crawl
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
@@ -9,14 +10,14 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel *types.Channel, authorIds []types.Snowflake, crawlingInfo *types.CrawlingInfo) {
+func (crawler *Crawler) crawlChannelMessages(ctx context.Context, channel *types.Channel, authorIds []types.Snowflake, crawlingInfo *types.CrawlingInfo) {
 	defer crawler.ActionLogger.EndAction(
 		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl messages in channel %s", channel.Id), crawler.Sdk.TempLog, false, false),
 	)
 	if channel.Type == types.PublicThread || channel.Type == types.PrivateThread {
-		parentChannel := crawler.Sdk.GetChannel(*channel.ParentId, authorizationToken)
+		parentChannel := crawler.Sdk.GetChannel(ctx, *channel.ParentId)
 		if parentChannel.Type == types.GuildForum {
-			threadsData := crawler.Sdk.GetThreadsData(authorizationToken, *channel.ParentId, []types.Snowflake{channel.Id})
+			threadsData := crawler.Sdk.GetThreadsData(ctx, *channel.ParentId, []types.Snowflake{channel.Id})
 			if threadsData != nil {
 				firstMessage := threadsData.Threads[channel.Id].FirstMessage
 				crawler.Sdk.Repo.InsertMultipleMessages([]types.Message{firstMessage}, "THREAD_FIRST_MESSAGE")
@@ -27,29 +28,29 @@ func (crawler *Crawler) crawlChannelMessages(authorizationToken string, channel 
 	if channel.LastMessageId == nil {
 		crawler.Sdk.Log("Channel doesn't contain messages: nothing to do", utils.INFO)
 	} else if crawlingInfo != nil {
-		messages := crawler.fetchChannelMessages(authorizationToken, authorIds, channel.Id, &discord.GetChannelMessagesOptions{After: &crawlingInfo.NewestReadId})
+		messages := crawler.fetchChannelMessages(ctx, authorIds, channel.Id, &discord.GetChannelMessagesOptions{After: &crawlingInfo.NewestReadId})
 		for len(messages) > 0 {
 			newestReadMessageId := messages[0].Id
-			messages = crawler.fetchChannelMessages(authorizationToken, authorIds, channel.Id, &discord.GetChannelMessagesOptions{After: &newestReadMessageId})
+			messages = crawler.fetchChannelMessages(ctx, authorIds, channel.Id, &discord.GetChannelMessagesOptions{After: &newestReadMessageId})
 		}
 		if !crawlingInfo.ReachedTop {
-			messages := crawler.fetchChannelMessages(authorizationToken, authorIds, channel.Id, &discord.GetChannelMessagesOptions{Before: &crawlingInfo.OldestReadId})
+			messages := crawler.fetchChannelMessages(ctx, authorIds, channel.Id, &discord.GetChannelMessagesOptions{Before: &crawlingInfo.OldestReadId})
 			for len(messages) > 0 {
 				oldestReadMessageId := messages[len(messages)-1].Id
-				messages = crawler.fetchChannelMessages(authorizationToken, authorIds, channel.Id, &discord.GetChannelMessagesOptions{Before: &oldestReadMessageId})
+				messages = crawler.fetchChannelMessages(ctx, authorIds, channel.Id, &discord.GetChannelMessagesOptions{Before: &oldestReadMessageId})
 			}
 		}
 	} else {
-		messages := crawler.fetchChannelMessages(authorizationToken, authorIds, channel.Id, nil)
+		messages := crawler.fetchChannelMessages(ctx, authorIds, channel.Id, nil)
 		for len(messages) > 0 {
 			oldestReadMessageId := messages[len(messages)-1].Id
-			messages = crawler.fetchChannelMessages(authorizationToken, authorIds, channel.Id, &discord.GetChannelMessagesOptions{Before: &oldestReadMessageId})
+			messages = crawler.fetchChannelMessages(ctx, authorIds, channel.Id, &discord.GetChannelMessagesOptions{Before: &oldestReadMessageId})
 		}
 	}
 }
 
-func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorIds []types.Snowflake, channelId types.Snowflake, options *discord.GetChannelMessagesOptions) []types.Message {
-	messages := crawler.Sdk.GetChannelMessages(authorizationToken, channelId, options)
+func (crawler *Crawler) fetchChannelMessages(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake, options *discord.GetChannelMessagesOptions) []types.Message {
+	messages := crawler.Sdk.GetChannelMessages(ctx, channelId, options)
 
 	messagesToStore := utils.Filter(messages, func(message types.Message) bool {
 		if message.Type == types.ThreadStarterMessage {
@@ -61,7 +62,7 @@ func (crawler *Crawler) fetchChannelMessages(authorizationToken string, authorId
 	crawler.Sdk.Repo.InsertMultipleMessages(messagesToStore, "PENDING")
 	for i := range messages {
 		if messages[i].Reactions != nil {
-			crawler.crawlMessageReactions(authorizationToken, &messages[i], authorIds)
+			crawler.crawlMessageReactions(ctx, &messages[i], authorIds)
 		}
 	}
 	crawler.storeChannelMessagesCrawlingInfo(channelId, messages, options)

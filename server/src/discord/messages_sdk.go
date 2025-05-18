@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,8 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (sdk *DiscordSdk) GetMessageReactions(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake, emoji string, burst bool, options *GetMessageReactionsOptions) []types.User {
-	resp, err := sdk.ApiClient.getMessageReactions(authorizationToken, channelId, messageId, emoji, burst, options)
+func (sdk *DiscordSdk) GetMessageReactions(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string, burst bool, options *GetMessageReactionsOptions) []types.User {
+	resp, err := sdk.ApiClient.getMessageReactions(ctx, channelId, messageId, emoji, burst, options)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return nil
@@ -30,8 +31,8 @@ func (sdk *DiscordSdk) GetMessageReactions(authorizationToken string, channelId 
 	return usersReacted
 }
 
-func (sdk *DiscordSdk) DeleteMessage(authorizationToken string, channelId types.Snowflake, messageId types.Snowflake) bool {
-	resp, err := sdk.ApiClient.deleteMessage(authorizationToken, channelId, messageId)
+func (sdk *DiscordSdk) DeleteMessage(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake) bool {
+	resp, err := sdk.ApiClient.deleteMessage(ctx, channelId, messageId)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
 		return false

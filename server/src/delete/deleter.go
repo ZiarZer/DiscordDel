@@ -46,6 +46,7 @@ func (deleter *Deleter) DeleteChannelCrawledData(ctx context.Context, authorIds 
 	defer deleter.ActionLogger.EndAction(
 		deleter.ActionLogger.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true, true),
 	)
+	deleter.deleteChannelCrawledReactions(ctx, authorIds, channelId)
 	deleter.deleteChannelCrawledMessages(ctx, authorIds, channelId, options)
 }
 
@@ -95,6 +96,43 @@ func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, author
 			}
 		} else {
 			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "ERROR")
+		}
+	}
+}
+
+func (deleter *Deleter) deleteChannelCrawledReactions(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake) {
+	reactions, err := deleter.Sdk.Repo.GetReactionsByChannelId(channelId, authorIds)
+	if err != nil {
+		if reactions != nil {
+			utils.InternalLog(err.Error(), utils.WARNING)
+		} else {
+			utils.InternalLog(err.Error(), utils.ERROR)
+			return
+		}
+	}
+
+	if len(reactions) == 0 {
+		deleter.Sdk.Log(fmt.Sprintf("No reaction to delete in channel %s", channelId), utils.INFO)
+		return
+	}
+
+	channel := deleter.Sdk.GetChannel(ctx, channelId)
+	if channel.ThreadMetadata != nil {
+		if channel.ThreadMetadata.Locked {
+			deleter.Sdk.Repo.UpdateReactionsStatus(reactions, "ERROR")
+			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d reactions to delete", channelId, len(reactions)), utils.ERROR)
+			return
+		} else if channel.ThreadMetadata.Archived {
+			deleter.Sdk.UnarchiveThread(ctx, channelId)
+		}
+	}
+
+	for i := range reactions {
+		success := deleter.Sdk.DeleteOwnReaction(ctx, channelId, reactions[i].MessageId, reactions[i].Emoji)
+		if success {
+			deleter.Sdk.Repo.UpdateReactionsStatus([]types.Reaction{reactions[i]}, "DELETED")
+		} else {
+			deleter.Sdk.Repo.UpdateReactionsStatus([]types.Reaction{reactions[i]}, "ERROR")
 		}
 	}
 }

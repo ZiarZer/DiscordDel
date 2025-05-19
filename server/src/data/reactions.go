@@ -56,3 +56,65 @@ func (repo *Repository) InsertMultipleReactions(messageId types.Snowflake, userI
 	}
 	return nil
 }
+
+func (repo *Repository) GetReactionsByChannelId(channelId types.Snowflake, authorIds []types.Snowflake) ([]types.Reaction, error) {
+	if len(authorIds) == 0 {
+		return []types.Reaction{}, nil
+	}
+	authorIdsParams := strings.TrimSuffix(strings.Repeat("?, ", len(authorIds)), ", ")
+	stmt, err := repo.db.Prepare(
+		fmt.Sprintf(
+			"SELECT `r`.`message_id`, `r`.`user_id`, `r`.`emoji`, `r`.`is_burst`, `r`.`status`\n"+
+				"FROM `reactions` AS `r` JOIN `messages` AS `m` ON `m`.`id` = `r`.`message_id`\n"+
+				"WHERE `m`.`channel_id` = ? AND `r`.`user_id` IN (%s) ORDER BY `r`.`message_id`, `r`.`emoji`, `r`.`user_id`",
+			authorIdsParams,
+		),
+	)
+	if err != nil {
+		utils.InternalLog("Failed to prepare getting reactions by channel ID", utils.ERROR)
+		return nil, err
+	}
+	params := []any{types.Snowflake(channelId)}
+	for i := range authorIds {
+		params = append(params, string(authorIds[i]))
+	}
+	rows, err := stmt.Query(params...)
+	if err != nil {
+		utils.InternalLog("Failed to get reactions by channel ID", utils.ERROR)
+		return nil, err
+	}
+	defer rows.Close()
+	var reactions []types.Reaction
+	for rows.Next() {
+		var reaction types.Reaction
+		err = rows.Scan(&reaction.MessageId, &reaction.UserId, &reaction.Emoji, &reaction.IsBurst, &reaction.Status)
+		reactions = append(reactions, reaction)
+		if err != nil {
+			return reactions, err
+		}
+	}
+	return reactions, nil
+}
+
+func (repo *Repository) UpdateReactionsStatus(reactions []types.Reaction, updatedStatus string) error {
+	if len(reactions) == 0 {
+		return nil
+	}
+	messageIdsParams := strings.TrimSuffix(strings.Repeat("(?, ?, ?), ", len(reactions)), ", ")
+	stmt, err := repo.db.Prepare(fmt.Sprintf("UPDATE `reactions` SET `status` = ? WHERE (`message_id`, `user_id`, `emoji`) IN (%s)", messageIdsParams))
+	if err != nil {
+		utils.InternalLog("Failed to prepare reactions status update", utils.ERROR)
+		return err
+	}
+	params := []any{updatedStatus}
+	for i := range reactions {
+		params = append(params, reactions[i].MessageId, reactions[i].UserId, reactions[i].Emoji)
+	}
+	_, err = stmt.Exec(params...)
+
+	if err != nil {
+		utils.InternalLog("Failed to update reactions status", utils.ERROR)
+		return err
+	}
+	return nil
+}

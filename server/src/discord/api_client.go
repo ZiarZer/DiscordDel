@@ -192,3 +192,7 @@ func (apiClient *ApiClient) getMessageReactions(ctx context.Context, channelId t
 	}
 	return apiClient.request(ctx, "GET", fmt.Sprintf("channels/%s/messages/%s/reactions/%s?%s", channelId, messageId, emoji, searchParams.Encode()), nil, 3)
 }
+
+func (apiClient *ApiClient) deleteOwnRection(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string) (*http.Response, error) {
+	return apiClient.request(ctx, "DELETE", fmt.Sprintf("channels/%s/messages/%s/reactions/%s/@me", channelId, messageId, emoji), nil, 3)
+}

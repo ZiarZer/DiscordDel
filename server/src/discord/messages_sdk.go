@@ -44,3 +44,17 @@ func (sdk *DiscordSdk) DeleteMessage(ctx context.Context, channelId types.Snowfl
 	sdk.Log(fmt.Sprintf("Deleted message %s", messageId), utils.SUCCESS)
 	return true
 }
+
+func (sdk *DiscordSdk) DeleteOwnReaction(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string) bool {
+	resp, err := sdk.ApiClient.deleteOwnRection(ctx, channelId, messageId, emoji)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return false
+	}
+	if resp.StatusCode != 204 {
+		sdk.Log(fmt.Sprintf("Failed to delete reaction %s on message %s", emoji, messageId), utils.ERROR)
+		return false
+	}
+	sdk.Log(fmt.Sprintf("Deleted reaction %s on message %s", emoji, messageId), utils.SUCCESS)
+	return true
+}

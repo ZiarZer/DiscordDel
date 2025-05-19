@@ -61,6 +61,7 @@ type Reaction struct {
 	UserId    Snowflake `json:"content"`
 	Emoji     string    `json:"type"`
 	IsBurst   bool      `json:"is_burst"`
+	Status    *string
 }
 
 type ThreadMember struct {

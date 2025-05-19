@@ -119,7 +119,7 @@ func (repo *Repository) UpdateMessagesStatus(messageIds []types.Snowflake, updat
 	_, err = stmt.Exec(params...)
 
 	if err != nil {
-		utils.InternalLog("Failed to update message status", utils.ERROR)
+		utils.InternalLog("Failed to update messages status", utils.ERROR)
 		return err
 	}
 	return nil

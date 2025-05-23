@@ -119,3 +119,17 @@ func (repo *Repository) UpdateReactionsStatus(reactions []types.Reaction, update
 	}
 	return nil
 }
+
+func (repo *Repository) UpdateReactionsStatusByMessageId(messageId types.Snowflake, updatedStatus string) error {
+	stmt, err := repo.db.Prepare("UPDATE `reactions` SET `status` = ? WHERE `message_id` = ?")
+	if err != nil {
+		utils.InternalLog("Failed to prepare reactions status update", utils.ERROR)
+		return err
+	}
+	_, err = stmt.Exec(updatedStatus, messageId)
+	if err != nil {
+		utils.InternalLog("Failed to update reactions status", utils.ERROR)
+		return err
+	}
+	return nil
+}

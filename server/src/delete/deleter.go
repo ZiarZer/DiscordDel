@@ -46,8 +46,8 @@ func (deleter *Deleter) DeleteChannelCrawledData(ctx context.Context, authorIds 
 	defer deleter.ActionLogger.EndAction(
 		deleter.ActionLogger.StartAction(fmt.Sprintf("Delete crawled data of channel %s", channelId), deleter.Sdk.Log, true, true),
 	)
-	deleter.deleteChannelCrawledReactions(ctx, authorIds, channelId)
 	deleter.deleteChannelCrawledMessages(ctx, authorIds, channelId, options)
+	deleter.deleteChannelCrawledReactions(ctx, authorIds, channelId)
 }
 
 func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
@@ -91,6 +91,8 @@ func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, author
 		success := deleter.Sdk.DeleteMessage(ctx, channelId, messagesToDelete[i].Id)
 		if success {
 			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "DELETED")
+			deleter.Sdk.Repo.UpdateReactionsStatusByMessageId(messagesToDelete[i].Id, "DELETED")
+
 			if len(messagesToDelete[i].Content) > 0 {
 				deleter.Sdk.Log(messagesToDelete[i].Content, nil)
 			}

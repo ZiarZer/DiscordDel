@@ -24,6 +24,13 @@ type ApiClient struct {
 }
 
 func (apiClient *ApiClient) request(ctx context.Context, method string, endpoint string, body *[]byte, retriesLeft int) (*http.Response, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		break
+	}
+
 	url := fmt.Sprintf("%s/%s", DiscordApibaseURL, endpoint)
 	var bodyReader io.Reader
 	if body != nil {

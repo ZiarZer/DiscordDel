@@ -63,13 +63,16 @@ type StartActionRequestBody struct {
 	Options            *delete.DeleteOptions `json:"options"`
 }
 
+type StopCurrentActionRequestBody struct{}
+
 var bodyConstructors = map[string]func() RequestBody{
-	"LOGIN":              func() RequestBody { return &LoginRequestBody{} },
-	"GET_USER_GUILDS":    func() RequestBody { return &GetUserGuildsRequestBody{} },
-	"GET_GUILD":          func() RequestBody { return &GetGuildRequestBody{} },
-	"GET_GUILD_CHANNELS": func() RequestBody { return &GetGuildChannelsRequestBody{} },
-	"GET_CHANNEL":        func() RequestBody { return &GetChannelRequestBody{} },
-	"START_ACTION":       func() RequestBody { return &StartActionRequestBody{} },
+	"LOGIN":               func() RequestBody { return &LoginRequestBody{} },
+	"GET_USER_GUILDS":     func() RequestBody { return &GetUserGuildsRequestBody{} },
+	"GET_GUILD":           func() RequestBody { return &GetGuildRequestBody{} },
+	"GET_GUILD_CHANNELS":  func() RequestBody { return &GetGuildChannelsRequestBody{} },
+	"GET_CHANNEL":         func() RequestBody { return &GetChannelRequestBody{} },
+	"START_ACTION":        func() RequestBody { return &StartActionRequestBody{} },
+	"STOP_CURRENT_ACTION": func() RequestBody { return &StopCurrentActionRequestBody{} },
 }
 
 func handleMessage(ctx context.Context, conn *websocket.Conn) error {
@@ -97,6 +100,7 @@ func handleMessage(ctx context.Context, conn *websocket.Conn) error {
 }
 
 var currentAction bool
+var cancelCurrentAction context.CancelFunc
 var currentActionMutex sync.Mutex
 
 func startAction() bool {
@@ -204,8 +208,12 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 		return nil
 	}
 	defer endAction()
+	currentActionMutex.Lock()
+	var cancellableCtx context.Context
+	cancellableCtx, cancelCurrentAction = context.WithCancel(ctx)
+	currentActionMutex.Unlock()
 
-	authorizedContext := context.WithValue(ctx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
+	authorizedContext := context.WithValue(cancellableCtx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
 	if body.Type == CRAWL {
 		if body.Scope == CHANNEL {
 			crawler.CrawlChannel(authorizedContext, body.AuthorIds, *body.TargetId)
@@ -226,6 +234,22 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 		} else if body.Scope == ALL {
 			deleter.BulkDeleteCrawledData(authorizedContext, body.AuthorIds, nil, options)
 		}
+	}
+	return nil
+}
+
+func (body *StopCurrentActionRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
+	currentActionMutex.Lock()
+	defer currentActionMutex.Unlock()
+	if !currentAction {
+		sdk.Log("No action is running, there is nothing to stop", utils.INFO)
+		return nil
+	}
+	if cancelCurrentAction != nil {
+		utils.InternalLog("Cancelling current action", utils.INFO)
+		cancelCurrentAction()
+	} else {
+		utils.InternalLog("No cancel function found", utils.FATAL)
 	}
 	return nil
 }

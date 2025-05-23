@@ -57,10 +57,11 @@ type ReactionCountDetails struct {
 }
 
 type Reaction struct {
-	MessageId Snowflake `json:"id"`
-	UserId    Snowflake `json:"content"`
-	Emoji     string    `json:"type"`
-	IsBurst   bool      `json:"is_burst"`
+	ChannelId Snowflake
+	MessageId Snowflake
+	UserId    Snowflake
+	Emoji     string `json:"type"`
+	IsBurst   bool   `json:"is_burst"`
 	Status    *string
 }
 

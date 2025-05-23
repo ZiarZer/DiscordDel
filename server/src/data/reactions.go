@@ -11,6 +11,7 @@ import (
 func (repo *Repository) createReactionsTable() error {
 	_, err := repo.db.Exec(
 		"CREATE TABLE IF NOT EXISTS `reactions` (\n" +
+			"`channel_id` varchar(20) NOT NULL,\n" +
 			"`message_id` varchar(20) NOT NULL,\n" +
 			"`user_id` varchar(20) NOT NULL,\n" +
 			"`emoji` varchar(20) NOT NULL,\n" +
@@ -26,15 +27,15 @@ func (repo *Repository) createReactionsTable() error {
 	return nil
 }
 
-func (repo *Repository) InsertMultipleReactions(messageId types.Snowflake, userIds []types.Snowflake, emoji string, isBurst bool) error {
+func (repo *Repository) InsertMultipleReactions(channelId types.Snowflake, messageId types.Snowflake, userIds []types.Snowflake, emoji string, isBurst bool) error {
 	if len(userIds) == 0 {
 		return nil
 	}
 
 	query := fmt.Sprintf(
-		"INSERT INTO `reactions` (`message_id`, `user_id`, `emoji`, `is_burst`) VALUES %s\n"+
+		"INSERT INTO `reactions` (`channel_id`, `message_id`, `user_id`, `emoji`, `is_burst`) VALUES %s\n"+
 			"ON CONFLICT DO UPDATE SET `is_burst` = EXCLUDED.`is_burst`",
-		strings.TrimSuffix(strings.Repeat("(?, ?, ?, ?), ", len(userIds)), ", "),
+		strings.TrimSuffix(strings.Repeat("(?, ?, ?, ?, ?), ", len(userIds)), ", "),
 	)
 	stmt, err := repo.db.Prepare(query)
 	if err != nil {
@@ -42,12 +43,13 @@ func (repo *Repository) InsertMultipleReactions(messageId types.Snowflake, userI
 		return err
 	}
 
-	params := make([]interface{}, len(userIds)*4)
+	params := make([]interface{}, len(userIds)*5)
 	for i := range userIds {
-		params[4*i] = messageId
-		params[4*i+1] = userIds[i]
-		params[4*i+2] = emoji
-		params[4*i+3] = isBurst
+		params[5*i] = channelId
+		params[5*i+1] = messageId
+		params[5*i+2] = userIds[i]
+		params[5*i+3] = emoji
+		params[5*i+4] = isBurst
 	}
 	_, err = stmt.Exec(params...)
 	if err != nil {
@@ -64,10 +66,9 @@ func (repo *Repository) GetPendingReactionsByChannelId(channelId types.Snowflake
 	authorIdsParams := strings.TrimSuffix(strings.Repeat("?, ", len(authorIds)), ", ")
 	stmt, err := repo.db.Prepare(
 		fmt.Sprintf(
-			"SELECT `r`.`message_id`, `r`.`user_id`, `r`.`emoji`, `r`.`is_burst`, `r`.`status`\n"+
-				"FROM `reactions` AS `r` JOIN `messages` AS `m` ON `m`.`id` = `r`.`message_id`\n"+
-				"WHERE `m`.`channel_id` = ? AND `r`.`user_id` IN (%s) AND `r`.`status` = 'PENDING'\n"+
-				"ORDER BY `r`.`message_id`, `r`.`emoji`, `r`.`user_id`",
+			"SELECT `channel_id`, `message_id`, `user_id`, `emoji`, `is_burst`, `status` FROM `reactions`\n"+
+				"WHERE `channel_id` = ? AND `user_id` IN (%s) AND `status` = 'PENDING'\n"+
+				"ORDER BY `message_id`, `emoji`, `user_id`",
 			authorIdsParams,
 		),
 	)
@@ -88,7 +89,7 @@ func (repo *Repository) GetPendingReactionsByChannelId(channelId types.Snowflake
 	var reactions []types.Reaction
 	for rows.Next() {
 		var reaction types.Reaction
-		err = rows.Scan(&reaction.MessageId, &reaction.UserId, &reaction.Emoji, &reaction.IsBurst, &reaction.Status)
+		err = rows.Scan(&reaction.ChannelId, &reaction.MessageId, &reaction.UserId, &reaction.Emoji, &reaction.IsBurst, &reaction.Status)
 		reactions = append(reactions, reaction)
 		if err != nil {
 			return reactions, err

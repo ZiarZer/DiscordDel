@@ -57,6 +57,6 @@ func (crawler *Crawler) fetchReactionsOnEmoji(ctx context.Context, channelId typ
 		),
 		func(user types.User) types.Snowflake { return user.Id },
 	)
-	crawler.Sdk.Repo.InsertMultipleReactions(messageId, userIds, emoji, isBurst)
+	crawler.Sdk.Repo.InsertMultipleReactions(channelId, messageId, userIds, emoji, isBurst)
 	return usersReacted
 }

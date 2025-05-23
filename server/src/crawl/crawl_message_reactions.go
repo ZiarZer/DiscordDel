@@ -10,12 +10,12 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
-func (crawler *Crawler) crawlMessageReactions(ctx context.Context, message *types.Message, authorIds []types.Snowflake) {
+func (crawler *Crawler) crawlMessageReactions(ctx context.Context, message *types.Message, authorIds []types.Snowflake) error {
 	defer crawler.ActionLogger.EndAction(
 		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl reactions on message %s", message.Id), crawler.Sdk.TempLog, false, false),
 	)
 	if message.Reactions == nil {
-		return
+		return nil
 	}
 
 	for i := range message.Reactions {
@@ -25,30 +25,47 @@ func (crawler *Crawler) crawlMessageReactions(ctx context.Context, message *type
 			emoji = emoji + fmt.Sprintf(":%s", *reaction.Emoji.Id)
 		}
 		if reaction.CountDetails.Normal > 0 {
-			crawler.crawlReactionsOnEmoji(ctx, message.ChannelId, message.Id, emoji, false, authorIds)
+			err := crawler.crawlReactionsOnEmoji(ctx, message.ChannelId, message.Id, emoji, false, authorIds)
+			if err != nil {
+				return err
+			}
 		}
 		if reaction.CountDetails.Burst > 0 {
-			crawler.crawlReactionsOnEmoji(ctx, message.ChannelId, message.Id, emoji, true, authorIds)
+			err := crawler.crawlReactionsOnEmoji(ctx, message.ChannelId, message.Id, emoji, true, authorIds)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-func (crawler *Crawler) crawlReactionsOnEmoji(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, authorIds []types.Snowflake) {
+func (crawler *Crawler) crawlReactionsOnEmoji(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, authorIds []types.Snowflake) error {
 	defer crawler.ActionLogger.EndAction(
 		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl reactions with %s on message %s", emoji, messageId), crawler.Sdk.TempLog, false, false),
 	)
-	usersReacted := crawler.fetchReactionsOnEmoji(ctx, channelId, messageId, emoji, isBurst, nil, authorIds)
+	usersReacted, err := crawler.fetchReactionsOnEmoji(ctx, channelId, messageId, emoji, isBurst, nil, authorIds)
+	if err != nil {
+		return err
+	}
 	pageSize := 100
 	options := &discord.GetMessageReactionsOptions{Limit: &pageSize}
 
 	for len(usersReacted) == pageSize {
 		options.After = &usersReacted[len(usersReacted)-1].Id
-		usersReacted = crawler.fetchReactionsOnEmoji(ctx, channelId, messageId, emoji, isBurst, options, authorIds)
+		usersReacted, err = crawler.fetchReactionsOnEmoji(ctx, channelId, messageId, emoji, isBurst, options, authorIds)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (crawler *Crawler) fetchReactionsOnEmoji(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, options *discord.GetMessageReactionsOptions, authorIds []types.Snowflake) []types.User {
-	usersReacted := crawler.Sdk.GetMessageReactions(ctx, channelId, messageId, emoji, isBurst, options)
+func (crawler *Crawler) fetchReactionsOnEmoji(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, options *discord.GetMessageReactionsOptions, authorIds []types.Snowflake) ([]types.User, error) {
+	usersReacted, err := crawler.Sdk.GetMessageReactions(ctx, channelId, messageId, emoji, isBurst, options)
+	if err != nil {
+		return nil, err
+	}
 
 	userIds := utils.MapWithoutDuplicate(
 		utils.Filter(
@@ -58,5 +75,5 @@ func (crawler *Crawler) fetchReactionsOnEmoji(ctx context.Context, channelId typ
 		func(user types.User) types.Snowflake { return user.Id },
 	)
 	crawler.Sdk.Repo.InsertMultipleReactions(channelId, messageId, userIds, emoji, isBurst)
-	return usersReacted
+	return usersReacted, nil
 }

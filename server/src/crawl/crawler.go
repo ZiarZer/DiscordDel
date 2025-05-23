@@ -15,11 +15,14 @@ type Crawler struct {
 	ActionLogger *actions.ActionLogger
 }
 
-func (crawler *Crawler) CrawlChannel(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake) {
-	channel := crawler.Sdk.GetChannel(ctx, channelId)
+func (crawler *Crawler) CrawlChannel(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake) error {
+	channel, err := crawler.Sdk.GetChannel(ctx, channelId)
+	if err != nil {
+		return err
+	}
 	if channel == nil {
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get channel %s", channelId), utils.ERROR)
-		return
+		return nil
 	}
 
 	crawlingInfo, err := crawler.Sdk.Repo.GetChannelCrawlingInfo(channelId)
@@ -31,8 +34,9 @@ func (crawler *Crawler) CrawlChannel(ctx context.Context, authorIds []types.Snow
 		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl channel %s", channelId), crawler.Sdk.Log, true, true),
 	)
 	if channel.Type == types.GuildForum {
-		crawler.crawlChannelThreads(ctx, channel, crawlingInfo)
+		err = crawler.crawlChannelThreads(ctx, channel, crawlingInfo)
 	} else {
-		crawler.crawlChannelMessages(ctx, channel, authorIds, crawlingInfo)
+		err = crawler.crawlChannelMessages(ctx, channel, authorIds, crawlingInfo)
 	}
+	return err
 }

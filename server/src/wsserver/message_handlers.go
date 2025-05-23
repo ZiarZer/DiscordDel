@@ -117,7 +117,10 @@ func endAction() {
 
 func (body *LoginRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	authorizedContext := context.WithValue(ctx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
-	user := sdk.Login(authorizedContext)
+	user, err := sdk.Login(authorizedContext)
+	if err != nil {
+		return err
+	}
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
 		utils.InternalLog("Failed to serialize user info", utils.ERROR)
@@ -128,7 +131,10 @@ func (body *LoginRequestBody) handle(ctx context.Context, conn *websocket.Conn) 
 
 func (body *GetGuildRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	authorizedContext := context.WithValue(ctx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
-	guild := sdk.GetGuild(authorizedContext, body.GuildId)
+	guild, err := sdk.GetGuild(authorizedContext, body.GuildId)
+	if err != nil {
+		return err
+	}
 	jsonGuild, err := json.Marshal(guild)
 	if err != nil {
 		utils.InternalLog("Failed to serialize guild info", utils.ERROR)
@@ -139,7 +145,10 @@ func (body *GetGuildRequestBody) handle(ctx context.Context, conn *websocket.Con
 
 func (body *GetChannelRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	authorizedContext := context.WithValue(ctx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
-	channel := sdk.GetChannel(authorizedContext, body.ChannelId)
+	channel, err := sdk.GetChannel(authorizedContext, body.ChannelId)
+	if err != nil {
+		return err
+	}
 	jsonChannel, err := json.Marshal(channel)
 	if err != nil {
 		utils.InternalLog("Failed to serialize channel info", utils.ERROR)
@@ -150,7 +159,10 @@ func (body *GetChannelRequestBody) handle(ctx context.Context, conn *websocket.C
 
 func (body *GetUserGuildsRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	authorizedContext := context.WithValue(ctx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
-	guilds := sdk.GetUserGuilds(authorizedContext)
+	guilds, err := sdk.GetUserGuilds(authorizedContext)
+	if err != nil {
+		return err
+	}
 	jsonGuildList, err := json.Marshal(guilds)
 	if err != nil {
 		utils.InternalLog("Failed to serialize guilds list", utils.ERROR)
@@ -161,7 +173,10 @@ func (body *GetUserGuildsRequestBody) handle(ctx context.Context, conn *websocke
 
 func (body *GetGuildChannelsRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	authorizedContext := context.WithValue(ctx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
-	channels := sdk.GetGuildChannels(authorizedContext, body.GuildId)
+	channels, err := sdk.GetGuildChannels(authorizedContext, body.GuildId)
+	if err != nil {
+		return err
+	}
 	jsonChannelList, err := json.Marshal(channels)
 	if err != nil {
 		utils.InternalLog("Failed to serialize channels list", utils.ERROR)

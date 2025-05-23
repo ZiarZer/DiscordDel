@@ -193,72 +193,22 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, loadedGuild]
   );
-  const sendCrawlChannelRequest = useCallback(
-    () =>
+  const sendStartActionRequest = useCallback(
+    (
+      type: 'CRAWL' | 'DELETE',
+      scope: 'CHANNEL' | 'GUILD' | 'ALL',
+      targetId?: string,
+      options?: string
+    ) =>
       sendJsonMessage({
-        type: 'CRAWL_CHANNEL',
-        body: {
-          authorizationToken,
-          channelId: loadedChannel?.id,
-          authorIds: [currentUser?.id],
-        },
-      }),
-    [sendJsonMessage, authorizationToken, loadedChannel, currentUser]
-  );
-  const sendCrawlGuildRequest = useCallback(
-    () =>
-      sendJsonMessage({
-        type: 'CRAWL_GUILD',
-        body: {
-          authorizationToken,
-          guildId: loadedGuild?.id,
-          authorIds: [currentUser?.id],
-        },
-      }),
-    [sendJsonMessage, authorizationToken, loadedGuild, currentUser]
-  );
-  const sendCrawlAllGuildsRequest = useCallback(
-    () =>
-      sendJsonMessage({
-        type: 'CRAWL_ALL_GUILDS',
+        type: 'START_ACTION',
         body: {
           authorizationToken,
           authorIds: [currentUser?.id],
-        },
-      }),
-    [sendJsonMessage, authorizationToken, currentUser]
-  );
-  const sendDeleteChannelDataRequest = useCallback(
-    () =>
-      sendJsonMessage({
-        type: 'DELETE_CHANNEL_DATA',
-        body: {
-          authorizationToken,
-          authorIds: [currentUser?.id],
-          channelId: loadedChannel?.id,
-        },
-      }),
-    [sendJsonMessage, authorizationToken, currentUser, loadedChannel]
-  );
-  const sendDeleteGuildDataRequest = useCallback(
-    () =>
-      sendJsonMessage({
-        type: 'DELETE_GUILD_DATA',
-        body: {
-          authorizationToken,
-          authorIds: [currentUser?.id],
-          channelId: loadedGuild?.id,
-        },
-      }),
-    [sendJsonMessage, authorizationToken, currentUser, loadedGuild]
-  );
-  const sendDeleteAllDataRequest = useCallback(
-    () =>
-      sendJsonMessage({
-        type: 'DELETE_ALL_DATA',
-        body: {
-          authorizationToken,
-          authorIds: [currentUser?.id],
+          type,
+          scope,
+          targetId,
+          options,
         },
       }),
     [sendJsonMessage, authorizationToken, currentUser]
@@ -266,17 +216,37 @@ function App() {
 
   const userSectionActions = [
     { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
-    { label: 'Crawl all guilds', onClick: sendCrawlAllGuildsRequest },
-    { label: 'Delete all crawled data', onClick: sendDeleteAllDataRequest },
+    {
+      label: 'Crawl all guilds',
+      onClick: () => sendStartActionRequest('CRAWL', 'ALL'),
+    },
+    {
+      label: 'Delete all crawled data',
+      onClick: () => sendStartActionRequest('DELETE', 'ALL'),
+    },
   ];
   const guildSectionActions = [
     { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
-    { label: 'Crawl guild', onClick: sendCrawlGuildRequest },
-    { label: 'Delete guild crawled data', onClick: sendDeleteGuildDataRequest },
+    {
+      label: 'Crawl guild',
+      onClick: () => sendStartActionRequest('CRAWL', 'GUILD', loadedGuild?.id),
+    },
+    {
+      label: 'Delete guild crawled data',
+      onClick: () => sendStartActionRequest('DELETE', 'GUILD', loadedGuild?.id),
+    },
   ];
   const channelSectionActions = [
-    { label: 'Crawl channel', onClick: sendCrawlChannelRequest },
-    { label: 'Delete channel crawled data', onClick: sendDeleteChannelDataRequest },
+    {
+      label: 'Crawl channel',
+      onClick: () =>
+        sendStartActionRequest('CRAWL', 'CHANNEL', loadedChannel?.id),
+    },
+    {
+      label: 'Delete channel crawled data',
+      onClick: () =>
+        sendStartActionRequest('DELETE', 'CHANNEL', loadedChannel?.id),
+    },
   ];
 
   return (

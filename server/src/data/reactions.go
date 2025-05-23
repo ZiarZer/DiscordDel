@@ -57,7 +57,7 @@ func (repo *Repository) InsertMultipleReactions(messageId types.Snowflake, userI
 	return nil
 }
 
-func (repo *Repository) GetReactionsByChannelId(channelId types.Snowflake, authorIds []types.Snowflake) ([]types.Reaction, error) {
+func (repo *Repository) GetPendingReactionsByChannelId(channelId types.Snowflake, authorIds []types.Snowflake) ([]types.Reaction, error) {
 	if len(authorIds) == 0 {
 		return []types.Reaction{}, nil
 	}
@@ -66,7 +66,8 @@ func (repo *Repository) GetReactionsByChannelId(channelId types.Snowflake, autho
 		fmt.Sprintf(
 			"SELECT `r`.`message_id`, `r`.`user_id`, `r`.`emoji`, `r`.`is_burst`, `r`.`status`\n"+
 				"FROM `reactions` AS `r` JOIN `messages` AS `m` ON `m`.`id` = `r`.`message_id`\n"+
-				"WHERE `m`.`channel_id` = ? AND `r`.`user_id` IN (%s) ORDER BY `r`.`message_id`, `r`.`emoji`, `r`.`user_id`",
+				"WHERE `m`.`channel_id` = ? AND `r`.`user_id` IN (%s) AND `r`.`status` = 'PENDING'\n"+
+				"ORDER BY `r`.`message_id`, `r`.`emoji`, `r`.`user_id`",
 			authorIdsParams,
 		),
 	)

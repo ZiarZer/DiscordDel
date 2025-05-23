@@ -65,14 +65,14 @@ func (repo *Repository) InsertMultipleMessages(messages []types.Message, status 
 	return nil
 }
 
-func (repo *Repository) GetMessagesByChannelId(channelId types.Snowflake, authorIds []types.Snowflake) ([]types.Message, error) {
+func (repo *Repository) GetPendingMessagesByChannelId(channelId types.Snowflake, authorIds []types.Snowflake) ([]types.Message, error) {
 	if len(authorIds) == 0 {
 		return []types.Message{}, nil
 	}
 	authorIdsParams := strings.TrimSuffix(strings.Repeat("?, ", len(authorIds)), ", ")
 	stmt, err := repo.db.Prepare(
 		fmt.Sprintf(
-			"SELECT `id`, `content`, `type`, `channel_id`, `author_id`, `pinned`, `status` FROM `messages` WHERE `channel_id` = ? AND `author_id` IN (%s) ORDER BY `id`",
+			"SELECT `id`, `content`, `type`, `channel_id`, `author_id`, `pinned`, `status` FROM `messages` WHERE `channel_id` = ? AND `author_id` IN (%s) AND `status` = 'PENDING' ORDER BY `id`",
 			authorIdsParams,
 		),
 	)

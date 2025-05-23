@@ -51,7 +51,7 @@ func (deleter *Deleter) DeleteChannelCrawledData(ctx context.Context, authorIds 
 }
 
 func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake, options DeleteOptions) {
-	messages, err := deleter.Sdk.Repo.GetMessagesByChannelId(channelId, authorIds)
+	messages, err := deleter.Sdk.Repo.GetPendingMessagesByChannelId(channelId, authorIds)
 	if err != nil {
 		if messages != nil {
 			utils.InternalLog(err.Error(), utils.WARNING)
@@ -101,7 +101,7 @@ func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, author
 }
 
 func (deleter *Deleter) deleteChannelCrawledReactions(ctx context.Context, authorIds []types.Snowflake, channelId types.Snowflake) {
-	reactions, err := deleter.Sdk.Repo.GetReactionsByChannelId(channelId, authorIds)
+	reactions, err := deleter.Sdk.Repo.GetPendingReactionsByChannelId(channelId, authorIds)
 	if err != nil {
 		if reactions != nil {
 			utils.InternalLog(err.Error(), utils.WARNING)

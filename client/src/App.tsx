@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { version } from '../package.json';
 import { Console } from './components/Console';
 import { PaginatedList } from './components/PaginatedList';
+import { BigActionControlButton } from './components/BigActionControlButton';
 import { Section } from './components/Section';
 import { WebsocketReconnectBanner } from './components/WebsocketReconnectBanner';
 import { CHANNEL_TYPES } from './constants';
@@ -16,7 +17,7 @@ const Wrapper = styled.div`
   gap: 1em;
 `;
 
-const LeftPanel = styled.div`
+const ColumnPanel = styled.div`
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -87,6 +88,10 @@ function App() {
   const [loadedGuild, setLoadedGuild] = useState<Guild | null>(null);
   const [loadedChannel, setLoadedChannel] = useState<Channel | null>(null);
 
+  const [currentActionTitle, setCurrentActionTitle] = useState<string | null>(
+    null
+  );
+
   const userStatusMessage = useMemo(
     () =>
       currentUser != null
@@ -140,6 +145,10 @@ function App() {
       );
     } else if (lastJsonMessage?.type === 'TEMP_LOG') {
       setCurrentTempLog(lastJsonMessage.body as LogEntry);
+    } else if (lastJsonMessage?.type === 'ACTION_STARTED') {
+      setCurrentActionTitle((lastJsonMessage.body as { title: string }).title);
+    } else if (lastJsonMessage?.type === 'ACTION_ENDED') {
+      setCurrentActionTitle(null);
     }
   }, [lastJsonMessage, lastMessage]);
 
@@ -199,7 +208,7 @@ function App() {
       scope: 'CHANNEL' | 'GUILD' | 'ALL',
       targetId?: string,
       options?: string
-    ) =>
+    ) => {
       sendJsonMessage({
         type: 'START_ACTION',
         body: {
@@ -210,8 +219,20 @@ function App() {
           targetId,
           options,
         },
-      }),
+      });
+      setCurrentActionTitle(
+        targetId == null ? `${type} ${scope}` : `${type} ${scope} ${targetId}`
+      );
+    },
     [sendJsonMessage, authorizationToken, currentUser]
+  );
+  const sendStopCurrentActionRequest = useCallback(
+    () =>
+      sendJsonMessage({
+        type: 'STOP_CURRENT_ACTION',
+        body: {},
+      }),
+    [sendJsonMessage]
   );
 
   const userSectionActions = [
@@ -260,7 +281,7 @@ function App() {
         }
       />
       <Wrapper>
-        <LeftPanel>
+        <ColumnPanel>
           <Section
             title="User"
             actionInputBar={{
@@ -309,11 +330,17 @@ function App() {
             infoFields={channelSectionInfoFields}
             actions={channelSectionActions}
           />
-        </LeftPanel>
-        <PaginatedList
-          resultsList={resultsList}
-          isChannelType={isChannelType}
-        />
+        </ColumnPanel>
+        <ColumnPanel>
+          <BigActionControlButton
+            onClick={sendStopCurrentActionRequest}
+            actionTitle={currentActionTitle}
+          />
+          <PaginatedList
+            resultsList={resultsList}
+            isChannelType={isChannelType}
+          />
+        </ColumnPanel>
         <Console logs={logs} />
       </Wrapper>
       <Version>{version}</Version>

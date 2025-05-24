@@ -14,7 +14,7 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.25em;
-  width: 33%;
+  width: 100%;
 `;
 
 const PageNav = styled.div`

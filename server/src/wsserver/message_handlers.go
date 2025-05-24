@@ -3,6 +3,7 @@ package wsserver
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/ZiarZer/DiscordDel/delete"
@@ -189,6 +190,10 @@ func (body *GetGuildChannelsRequestBody) handle(ctx context.Context, conn *webso
 	return wsbase.SendMessageToClient(conn, "GET_GUILD_CHANNELS", jsonChannelList)
 }
 
+type ActionStartedResponseBody struct {
+	Title string `json:"title"`
+}
+
 func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
 	if body.Type != CRAWL && body.Type != DELETE {
 		sdk.Log("Unknown action type", utils.ERROR)
@@ -208,6 +213,17 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 		return nil
 	}
 	defer endAction()
+
+	responseBody := ActionStartedResponseBody{Title: fmt.Sprintf("%s %s", body.Type, body.Scope)}
+	if body.TargetId != nil {
+		responseBody.Title += fmt.Sprintf(" %s", *body.TargetId)
+	}
+	jsonResponseBody, err := json.Marshal(responseBody)
+	if err != nil {
+		utils.InternalLog("Failed to serialize response", utils.ERROR)
+		return err
+	}
+	wsbase.SendMessageToClient(conn, "ACTION_STARTED", jsonResponseBody)
 	currentActionMutex.Lock()
 	var cancellableCtx context.Context
 	cancellableCtx, cancelCurrentAction = context.WithCancel(ctx)
@@ -235,6 +251,8 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 			deleter.BulkDeleteCrawledData(authorizedContext, body.AuthorIds, nil, options)
 		}
 	}
+
+	wsbase.SendMessageToClient(conn, "ACTION_ENDED", nil)
 	return nil
 }
 

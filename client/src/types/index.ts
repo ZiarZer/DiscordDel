@@ -24,6 +24,12 @@ export type Channel = {
   parent_id?: string;
 }
 
+export type Action = {
+  type: 'CRAWL' | 'DELETE';
+  scope: 'CHANNEL' | 'GUILD' | 'ALL';
+  targetId?: string;
+}
+
 export type InfoListFieldConfig<T extends User | Guild | Channel> = {
   fieldName: keyof T;
   label: string;

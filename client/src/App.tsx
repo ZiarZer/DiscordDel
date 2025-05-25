@@ -9,7 +9,14 @@ import { BigActionControlButton } from './components/BigActionControlButton';
 import { Section } from './components/Section';
 import { WebsocketReconnectBanner } from './components/WebsocketReconnectBanner';
 import { CHANNEL_TYPES } from './constants';
-import { Channel, Guild, InfoListFieldConfig, LogEntry, User } from './types';
+import {
+  Action,
+  Channel,
+  Guild,
+  InfoListFieldConfig,
+  LogEntry,
+  User,
+} from './types';
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types';
 
 const Wrapper = styled.div`
@@ -88,9 +95,7 @@ function App() {
   const [loadedGuild, setLoadedGuild] = useState<Guild | null>(null);
   const [loadedChannel, setLoadedChannel] = useState<Channel | null>(null);
 
-  const [currentActionTitle, setCurrentActionTitle] = useState<string | null>(
-    null
-  );
+  const [currentAction, setCurrentAction] = useState<Action | null>(null);
 
   const userStatusMessage = useMemo(
     () =>
@@ -146,9 +151,9 @@ function App() {
     } else if (lastJsonMessage?.type === 'TEMP_LOG') {
       setCurrentTempLog(lastJsonMessage.body as LogEntry);
     } else if (lastJsonMessage?.type === 'ACTION_STARTED') {
-      setCurrentActionTitle((lastJsonMessage.body as { title: string }).title);
+      setCurrentAction(lastJsonMessage.body as Action);
     } else if (lastJsonMessage?.type === 'ACTION_ENDED') {
-      setCurrentActionTitle(null);
+      setCurrentAction(null);
     }
   }, [lastJsonMessage, lastMessage]);
 
@@ -220,9 +225,6 @@ function App() {
           options,
         },
       });
-      setCurrentActionTitle(
-        targetId == null ? `${type} ${scope}` : `${type} ${scope} ${targetId}`
-      );
     },
     [sendJsonMessage, authorizationToken, currentUser]
   );
@@ -334,7 +336,7 @@ function App() {
         <ColumnPanel>
           <BigActionControlButton
             onClick={sendStopCurrentActionRequest}
-            actionTitle={currentActionTitle}
+            action={currentAction}
           />
           <PaginatedList
             resultsList={resultsList}

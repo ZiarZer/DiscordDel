@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Log } from './Log';
-import { LogEntry } from '../types';
+import { Action } from '../types';
 import { useMemo } from 'react';
 
 const Wrapper = styled.div<{ $backgroundcolor: string }>`
@@ -25,26 +25,34 @@ const SectionTitle = styled.h2`
 `;
 
 export function BigActionControlButton({
-  actionTitle,
+  action,
   onClick,
 }: {
-  actionTitle?: string;
+  action?: Action;
   onClick: () => void;
 }) {
+  const actionTitle = useMemo(() => {
+    if (action == null) {
+      return null;
+    }
+    let result = `${action.type} ${action.scope}`;
+    if (action.targetId != null) {
+      result += ` ${action.targetId}`;
+    }
+    return result;
+  }, [action]);
   const backgroundColor = useMemo(
-    () => (actionTitle == null ? '#808080' : '#c23a22'),
-    [actionTitle]
+    () => (action == null ? '#808080' : '#c23a22'),
+    [action]
   );
   const subtitle = useMemo(
     () =>
-      actionTitle == null
-        ? 'No action running'
-        : `Action running: ${actionTitle}`,
-    [actionTitle]
+      action == null ? 'No action running' : `Action running: ${actionTitle}`,
+    [action]
   );
   const mainText = useMemo(
-    () => (actionTitle == null ? '_' : 'Click to STOP action'),
-    [actionTitle]
+    () => (action == null ? '_' : 'Click to STOP action'),
+    [action]
   );
 
   return (

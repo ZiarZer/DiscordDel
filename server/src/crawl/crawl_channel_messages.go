@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) crawlChannelMessages(ctx context.Context, channel *types.Channel, authorIds []types.Snowflake, crawlingInfo *types.CrawlingInfo) error {
+	action := actions.NewAction(fmt.Sprintf("Crawl messages in channel %s", channel.Id))
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl messages in channel %s", channel.Id), crawler.Sdk.TempLog, false, false),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.TempLog, false),
 	)
 	if channel.Type == types.PublicThread || channel.Type == types.PrivateThread {
 		parentChannel, err := crawler.Sdk.GetChannel(ctx, *channel.ParentId)

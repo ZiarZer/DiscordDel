@@ -40,26 +40,11 @@ type GetChannelRequestBody struct {
 	ChannelId          types.Snowflake `json:"channelId"`
 }
 
-type ActionType string
-
-const (
-	CRAWL  ActionType = "CRAWL"
-	DELETE ActionType = "DELETE"
-)
-
-type Scope string
-
-const (
-	CHANNEL Scope = "CHANNEL"
-	GUILD   Scope = "GUILD"
-	ALL     Scope = "ALL"
-)
-
 type StartActionRequestBody struct {
 	AuthorizationToken string                `json:"authorizationToken"`
 	AuthorIds          []types.Snowflake     `json:"authorIds"`
-	Type               ActionType            `json:"type"`
-	Scope              Scope                 `json:"scope"`
+	Type               types.ActionType      `json:"type"`
+	Scope              types.Scope           `json:"scope"`
 	TargetId           *types.Snowflake      `json:"targetId"`
 	Options            *delete.DeleteOptions `json:"options"`
 }
@@ -191,17 +176,17 @@ func (body *GetGuildChannelsRequestBody) handle(ctx context.Context, conn *webso
 }
 
 type ActionStartedResponseBody struct {
-	Title string `json:"title"`
+	Description string `json:"description"`
 }
 
 func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
-	if body.Type != CRAWL && body.Type != DELETE {
+	if body.Type != utils.CRAWL && body.Type != utils.DELETE {
 		sdk.Log("Unknown action type", utils.ERROR)
 		return nil
-	} else if body.Scope != CHANNEL || body.Scope != GUILD && body.Scope == ALL {
+	} else if body.Scope != utils.CHANNEL && body.Scope != utils.GUILD && body.Scope == utils.ALL {
 		sdk.Log("Unknown action scope", utils.ERROR)
 		return nil
-	} else if (body.Scope == CHANNEL || body.Scope == GUILD) && body.TargetId == nil {
+	} else if (body.Scope == utils.CHANNEL || body.Scope == utils.GUILD) && body.TargetId == nil {
 		sdk.Log("No target ID specified for action", utils.ERROR)
 		return nil
 	} else if len(body.AuthorIds) == 0 {
@@ -214,9 +199,9 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 	}
 	defer endAction()
 
-	responseBody := ActionStartedResponseBody{Title: fmt.Sprintf("%s %s", body.Type, body.Scope)}
+	responseBody := ActionStartedResponseBody{Description: fmt.Sprintf("%s %s", body.Type, body.Scope)}
 	if body.TargetId != nil {
-		responseBody.Title += fmt.Sprintf(" %s", *body.TargetId)
+		responseBody.Description += fmt.Sprintf(" %s", *body.TargetId)
 	}
 	jsonResponseBody, err := json.Marshal(responseBody)
 	if err != nil {
@@ -230,24 +215,24 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 	currentActionMutex.Unlock()
 
 	authorizedContext := context.WithValue(cancellableCtx, types.CtxKey{Key: "authorizationToken"}, body.AuthorizationToken)
-	if body.Type == CRAWL {
-		if body.Scope == CHANNEL {
+	if body.Type == utils.CRAWL {
+		if body.Scope == utils.CHANNEL {
 			crawler.CrawlChannel(authorizedContext, body.AuthorIds, *body.TargetId)
-		} else if body.Scope == GUILD {
+		} else if body.Scope == utils.GUILD {
 			crawler.CrawlGuild(authorizedContext, body.AuthorIds, *body.TargetId)
-		} else if body.Scope == ALL {
+		} else if body.Scope == utils.ALL {
 			crawler.CrawlAllGuilds(authorizedContext, body.AuthorIds)
 		}
-	} else if body.Type == DELETE {
+	} else if body.Type == utils.DELETE {
 		var options delete.DeleteOptions
 		if body.Options != nil {
 			options = *body.Options
 		}
-		if body.Scope == CHANNEL {
+		if body.Scope == utils.CHANNEL {
 			deleter.DeleteChannelCrawledData(authorizedContext, body.AuthorIds, *body.TargetId, options)
-		} else if body.Scope == GUILD {
+		} else if body.Scope == utils.GUILD {
 			deleter.BulkDeleteCrawledData(authorizedContext, body.AuthorIds, body.TargetId, options)
-		} else if body.Scope == ALL {
+		} else if body.Scope == utils.ALL {
 			deleter.BulkDeleteCrawledData(authorizedContext, body.AuthorIds, nil, options)
 		}
 	}

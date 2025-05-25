@@ -4,14 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) crawlChannelThreads(ctx context.Context, mainChannel *types.Channel, crawlingInfo *types.CrawlingInfo) error {
+	action := actions.NewAction(fmt.Sprintf("Crawl threads in channel %s", mainChannel.Id))
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl threads in channel %s", mainChannel.Id), crawler.Sdk.Log, true, false),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.Log, true),
 	)
 	pageSize := 25
 	options := discord.SearchChannelThreadsOptions{

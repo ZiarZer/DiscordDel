@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/ZiarZer/DiscordDel/data"
+	"github.com/ZiarZer/DiscordDel/types"
 
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/ZiarZer/DiscordDel/wsbase"
@@ -25,7 +26,7 @@ type LogEntry struct {
 	Message  string  `json:"message"`
 }
 
-func (sdk *DiscordSdk) sendLogEntryToClient(message string, logLevel *utils.LogLevel, websocketMessageType string) {
+func (sdk *DiscordSdk) sendLogEntryToClient(message string, logLevel *types.LogLevel, websocketMessageType string) {
 	if sdk.wsConn != nil {
 		var logLevelName *string
 		if logLevel != nil {
@@ -40,13 +41,13 @@ func (sdk *DiscordSdk) sendLogEntryToClient(message string, logLevel *utils.LogL
 	}
 }
 
-func (sdk *DiscordSdk) TempLog(message string, logLevel *utils.LogLevel) {
+func (sdk *DiscordSdk) TempLog(message string, logLevel *types.LogLevel) {
 	utils.TempInternalLog(message, logLevel)
 
 	sdk.sendLogEntryToClient(message, logLevel, "TEMP_LOG")
 }
 
-func (sdk *DiscordSdk) Log(message string, logLevel *utils.LogLevel) {
+func (sdk *DiscordSdk) Log(message string, logLevel *types.LogLevel) {
 	utils.InternalLog(message, logLevel)
 
 	sdk.sendLogEntryToClient(message, logLevel, "LOG")

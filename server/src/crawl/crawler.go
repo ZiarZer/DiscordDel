@@ -30,8 +30,9 @@ func (crawler *Crawler) CrawlChannel(ctx context.Context, authorIds []types.Snow
 		crawler.Sdk.Log(fmt.Sprintf("Failed to get crawling info for channel %s", channelId), utils.WARNING)
 	}
 
+	action := actions.NewMajorAction(utils.CRAWL, utils.CHANNEL, &channelId, fmt.Sprintf("Crawl channel %s", channelId))
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl channel %s", channelId), crawler.Sdk.Log, true, true),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.Log, true),
 	)
 	if channel.Type == types.GuildForum {
 		err = crawler.crawlChannelThreads(ctx, channel, crawlingInfo)

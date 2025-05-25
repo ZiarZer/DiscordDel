@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/types"
+	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) CrawlGuild(ctx context.Context, authorIds []types.Snowflake, guildId types.Snowflake) error {
+	action := actions.NewMajorAction(utils.CRAWL, utils.GUILD, &guildId, fmt.Sprintf("Crawl guild %s", guildId))
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl guild %s", guildId), crawler.Sdk.Log, true, true),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.Log, true),
 	)
 	channels, err := crawler.Sdk.GetGuildChannels(ctx, guildId)
 	if err != nil {
@@ -25,8 +28,9 @@ func (crawler *Crawler) CrawlGuild(ctx context.Context, authorIds []types.Snowfl
 }
 
 func (crawler *Crawler) CrawlAllGuilds(ctx context.Context, authorIds []types.Snowflake) error {
+	action := actions.NewMajorAction(utils.CRAWL, utils.ALL, nil, "Crawl all guilds")
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction("Crawl all guilds", crawler.Sdk.Log, true, true),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.Log, true),
 	)
 	guilds, err := crawler.Sdk.GetUserGuilds(ctx)
 	if err != nil {

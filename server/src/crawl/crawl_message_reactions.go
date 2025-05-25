@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/ZiarZer/DiscordDel/actions"
 	"github.com/ZiarZer/DiscordDel/discord"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
 func (crawler *Crawler) crawlMessageReactions(ctx context.Context, message *types.Message, authorIds []types.Snowflake) error {
+	action := actions.NewAction(fmt.Sprintf("Crawl reactions on message %s", message.Id))
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl reactions on message %s", message.Id), crawler.Sdk.TempLog, false, false),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.TempLog, false),
 	)
 	if message.Reactions == nil {
 		return nil
@@ -41,8 +43,9 @@ func (crawler *Crawler) crawlMessageReactions(ctx context.Context, message *type
 }
 
 func (crawler *Crawler) crawlReactionsOnEmoji(ctx context.Context, channelId types.Snowflake, messageId types.Snowflake, emoji string, isBurst bool, authorIds []types.Snowflake) error {
+	action := actions.NewAction(fmt.Sprintf("Crawl reactions with %s on message %s", emoji, messageId))
 	defer crawler.ActionLogger.EndAction(
-		crawler.ActionLogger.StartAction(fmt.Sprintf("Crawl reactions with %s on message %s", emoji, messageId), crawler.Sdk.TempLog, false, false),
+		crawler.ActionLogger.StartAction(action, crawler.Sdk.TempLog, false),
 	)
 	usersReacted, err := crawler.fetchReactionsOnEmoji(ctx, channelId, messageId, emoji, isBurst, nil, authorIds)
 	if err != nil {

@@ -57,7 +57,7 @@ const channelSectionInfoFields: Array<InfoListFieldConfig<Channel>> = [
     label: "Type",
     fieldName: "type",
     display: (v?: number | string) =>
-      CHANNEL_TYPES[v as keyof typeof CHANNEL_TYPES],
+      CHANNEL_TYPES[v as keyof typeof CHANNEL_TYPES]?.name,
   },
   { label: "Parent ID", fieldName: "parent_id" },
   { label: "Guild ID", fieldName: "guild_id" },
@@ -76,6 +76,12 @@ const getUserAvatarUrl = (user: User | null) =>
 const getGuildIconUrl = (guild: Guild | null) =>
   guild
     ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`
+    : undefined;
+
+// https://emoji.gg/emoji/7969-stage
+const getChannelIconUrl = (channel: Channel | null) =>
+  channel
+    ? `https://cdn3.emoji.gg/emojis/${CHANNEL_TYPES[channel.type].icon}.png`
     : undefined;
 
 function App() {
@@ -332,6 +338,7 @@ function App() {
             statusMessage={channelStatusMessage}
             currentObject={loadedChannel}
             infoFields={channelSectionInfoFields}
+            getAvatarUrl={getChannelIconUrl}
             actions={channelSectionActions}
           />
         </ColumnPanel>

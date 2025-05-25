@@ -1,4 +1,5 @@
 import { ReactElement } from 'react';
+import { CHANNEL_TYPES } from '../constants';
 
 export type User = {
   id: string;
@@ -17,7 +18,7 @@ export type Guild = {
 export type Channel = {
   id: string;
   name?: string;
-  type: number;
+  type: keyof typeof CHANNEL_TYPES;
   last_message_id?: string;
   message_count?: number;
   guild_id?: string;

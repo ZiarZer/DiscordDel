@@ -26,34 +26,48 @@ const SectionTitle = styled.h2`
 
 export function BigActionControlButton({
   action,
-  onClick,
+  running = false,
+  onStopAction,
+  onResumeLastAction,
 }: {
   action?: Action;
-  onClick: () => void;
+  running?: boolean;
+  onStopAction: () => void;
+  onResumeLastAction: (
+    type: 'CRAWL' | 'DELETE',
+    scope: 'CHANNEL' | 'GUILD' | 'ALL',
+    targetId?: string
+  ) => void;
 }) {
-  const actionTitle = useMemo(() => {
+  const backgroundColor = useMemo(() => {
     if (action == null) {
-      return null;
+      return '#808080';
     }
-    let result = `${action.type} ${action.scope}`;
-    if (action.targetId != null) {
-      result += ` ${action.targetId}`;
+    return running ? '#c23a22' : '#0f45d2';
+  }, [action, running]);
+  const { subtitle, mainText, onClick } = useMemo(() => {
+    if (action == null) {
+      return {
+        subtitle: 'No action running',
+        mainText: '_',
+        onClick: () => {},
+      };
     }
-    return result;
-  }, [action]);
-  const backgroundColor = useMemo(
-    () => (action == null ? '#808080' : '#c23a22'),
-    [action]
-  );
-  const subtitle = useMemo(
-    () =>
-      action == null ? 'No action running' : `Action running: ${actionTitle}`,
-    [action]
-  );
-  const mainText = useMemo(
-    () => (action == null ? '_' : 'Click to STOP action'),
-    [action]
-  );
+    const actionTitle =
+      action?.targetId == null
+        ? `${action.type} ${action.scope}`
+        : `${action.type} ${action.scope} ${action.targetId}`;
+
+    return {
+      mainText: running ? 'Click to STOP action' : 'Click to RESUME action',
+      subtitle: `${
+        running ? 'Action running' : 'Last action run'
+      }: ${actionTitle}`,
+      onClick: running
+        ? onStopAction
+        : () => onResumeLastAction(action.type, action.scope, action.targetId),
+    };
+  }, [action, running]);
 
   return (
     <Wrapper $backgroundcolor={backgroundColor} onClick={onClick}>

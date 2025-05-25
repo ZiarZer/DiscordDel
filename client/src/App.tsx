@@ -96,6 +96,7 @@ function App() {
   const [loadedChannel, setLoadedChannel] = useState<Channel | null>(null);
 
   const [currentAction, setCurrentAction] = useState<Action | null>(null);
+  const [isActionRunning, setIsActionRunning] = useState(false);
 
   const userStatusMessage = useMemo(
     () =>
@@ -152,8 +153,9 @@ function App() {
       setCurrentTempLog(lastJsonMessage.body as LogEntry);
     } else if (lastJsonMessage?.type === 'ACTION_STARTED') {
       setCurrentAction(lastJsonMessage.body as Action);
+      setIsActionRunning(true);
     } else if (lastJsonMessage?.type === 'ACTION_ENDED') {
-      setCurrentAction(null);
+      setIsActionRunning(false);
     }
   }, [lastJsonMessage, lastMessage]);
 
@@ -335,8 +337,10 @@ function App() {
         </ColumnPanel>
         <ColumnPanel>
           <BigActionControlButton
-            onClick={sendStopCurrentActionRequest}
             action={currentAction}
+            running={isActionRunning}
+            onStopAction={sendStopCurrentActionRequest}
+            onResumeLastAction={sendStartActionRequest}
           />
           <PaginatedList
             resultsList={resultsList}

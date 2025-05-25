@@ -33,7 +33,11 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 	for {
 		err := handleMessage(ctx, conn)
 		if err != nil {
-			utils.InternalLog("Closing server WebSocket", utils.INFO)
+			currentActionMutex.Lock()
+			defer currentActionMutex.Unlock()
+			if currentAction {
+				cancelCurrentAction()
+			}
 			return
 		}
 	}

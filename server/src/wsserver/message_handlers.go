@@ -3,7 +3,6 @@ package wsserver
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/ZiarZer/DiscordDel/delete"
@@ -176,7 +175,9 @@ func (body *GetGuildChannelsRequestBody) handle(ctx context.Context, conn *webso
 }
 
 type ActionStartedResponseBody struct {
-	Description string `json:"description"`
+	Type     types.ActionType `json:"type"`
+	Scope    types.Scope      `json:"scope"`
+	TargetId *types.Snowflake `json:"targetId"`
 }
 
 func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.Conn) error {
@@ -199,10 +200,7 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 	}
 	defer endAction()
 
-	responseBody := ActionStartedResponseBody{Description: fmt.Sprintf("%s %s", body.Type, body.Scope)}
-	if body.TargetId != nil {
-		responseBody.Description += fmt.Sprintf(" %s", *body.TargetId)
-	}
+	responseBody := ActionStartedResponseBody{Type: body.Type, Scope: body.Scope, TargetId: body.TargetId}
 	jsonResponseBody, err := json.Marshal(responseBody)
 	if err != nil {
 		utils.InternalLog("Failed to serialize response", utils.ERROR)

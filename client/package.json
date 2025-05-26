@@ -13,8 +13,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-use-websocket": "4.13.0",
-    "styled-components": "6.1.16",
-    "vite-plugin-svgr": "^4.3.0"
+    "styled-components": "6.1.16"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

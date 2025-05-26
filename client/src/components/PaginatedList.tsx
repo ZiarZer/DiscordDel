@@ -3,8 +3,8 @@ import styled, { css } from 'styled-components';
 
 import { Button } from '.';
 import { Channel, Guild } from '../types';
-import CopyIcon from '../assets/copy.svg?react';
-import ExternalLinkIcon from '../assets/external-link.svg?react';
+import { CopyIcon } from '../assets/CopyIcon';
+import { ExternalLinkIcon } from '../assets/ExternalLinkIcon';
 
 const Wrapper = styled.div`
   background-color: #ffffff30;

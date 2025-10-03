@@ -52,3 +52,31 @@ func (sdk *DiscordSdk) GetGuildChannels(ctx context.Context, guildId types.Snowf
 	sdk.Repo.InsertMultipleChannels(channels)
 	return channels, nil
 }
+
+func (sdk *DiscordSdk) SearchGuildMessages(ctx context.Context, guildId types.Snowflake, options *SearchGuildMessagesOptions) ([]types.Message, error) {
+	resp, err := sdk.ApiClient.searchGuildMessages(ctx, guildId, options)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		utils.InternalLog(err.Error(), utils.ERROR)
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		sdk.Log(string(body), utils.ERROR)
+	}
+	var result types.GuildSearchResult
+	json.Unmarshal(body, &result)
+	messages := utils.Map(result.MessageArrays, func(arr []types.Message) types.Message { return arr[0] })
+	if options.Offset > 0 {
+		sdk.Log(fmt.Sprintf("Got %d messages (offset %d) in guild %s", len(result.MessageArrays), options.Offset, guildId), utils.SUCCESS)
+	} else if options.MinId != nil {
+		sdk.Log(fmt.Sprintf("Got %d messages (after %s) in guild %s", len(result.MessageArrays), *options.MinId, guildId), utils.SUCCESS)
+	} else {
+		sdk.Log(fmt.Sprintf("Got %d messages in guild %s", len(result.MessageArrays), guildId), utils.SUCCESS)
+	}
+	sdk.Repo.InsertMultipleMessages(messages, "PENDING")
+	return messages, nil
+}

@@ -50,7 +50,7 @@ var actionLogger actions.ActionLogger
 
 func RunWebSocketServer(pattern string, port int) {
 	http.HandleFunc(pattern, handleConnection)
-	sdk = discord.DiscordSdk{Repo: data.NewRepository(), ApiClient: &discord.ApiClient{Delay: 700}}
+	sdk = discord.DiscordSdk{Repo: data.NewRepository(), ApiClient: &discord.ApiClient{Delay: 1600}}
 	actionLogger = actions.ActionLogger{Repo: sdk.Repo}
 	crawler = crawl.Crawler{Sdk: &sdk, ActionLogger: &actionLogger}
 	deleter = delete.Deleter{Sdk: &sdk, ActionLogger: &actionLogger}

@@ -31,7 +31,7 @@ func (crawler *Crawler) crawlChannelThreads(ctx context.Context, mainChannel *ty
 			crawler.Sdk.Log("Channel doesn't have any thread: nothing to do", utils.INFO)
 			return nil
 		}
-		crawler.Sdk.Repo.InsertChannelCrawlingInfo(mainChannel.Id, threads[0].Id, threads[len(threads)-1].Id, true)
+		crawler.Sdk.Repo.InsertCrawlingInfo(mainChannel.Id, "CHANNEL", threads[0].Id, threads[len(threads)-1].Id, true)
 		startOffset = len(threads)
 	} else {
 		alreadyCrawledCount, _ := crawler.Sdk.Repo.GetChannelChildrenCount(mainChannel.Id)
@@ -57,7 +57,7 @@ func (crawler *Crawler) crawlChannelThreads(ctx context.Context, mainChannel *ty
 					return err
 				}
 			}
-			crawler.Sdk.Repo.UpdateChannelCrawlingNewestReadId(mainChannel.Id, updatedNewestReadId)
+			crawler.Sdk.Repo.UpdateCrawlingNewestReadId(mainChannel.Id, updatedNewestReadId)
 		}
 	}
 	options.Offset = startOffset
@@ -67,7 +67,7 @@ func (crawler *Crawler) crawlChannelThreads(ctx context.Context, mainChannel *ty
 	}
 	for len(threads) > 0 {
 		options.Offset += len(threads)
-		crawler.Sdk.Repo.UpdateChannelCrawlingNewestReadId(mainChannel.Id, threads[len(threads)-1].Id)
+		crawler.Sdk.Repo.UpdateCrawlingNewestReadId(mainChannel.Id, threads[len(threads)-1].Id)
 		threads, err = crawler.fetchChannelThreads(ctx, mainChannel.Id, &options)
 		if err != nil {
 			return err

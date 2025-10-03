@@ -102,8 +102,9 @@ func (crawler *Crawler) fetchChannelMessages(ctx context.Context, authorIds []ty
 func (crawler *Crawler) storeChannelMessagesCrawlingInfo(channelId types.Snowflake, fetchedMessages []types.Message, fetchOptions *discord.GetChannelMessagesOptions) {
 	if fetchOptions == nil {
 		if len(fetchedMessages) > 0 {
-			crawler.Sdk.Repo.InsertChannelCrawlingInfo(
+			crawler.Sdk.Repo.InsertCrawlingInfo(
 				channelId,
+				"CHANNEL",
 				fetchedMessages[len(fetchedMessages)-1].Id,
 				fetchedMessages[0].Id,
 				false,
@@ -122,7 +123,7 @@ func (crawler *Crawler) storeChannelMessagesCrawlingInfo(channelId types.Snowfla
 		if fetchOptions.Before != nil && len(fetchedMessages) == 0 {
 			reachedTop = utils.MakePointer(true)
 		}
-		crawler.Sdk.Repo.UpdateChannelCrawlingInfo(
+		crawler.Sdk.Repo.UpdateCrawlingInfo(
 			channelId,
 			oldestReadMessageId,
 			newestReadMessageId,

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/ZiarZer/DiscordDel/delete"
 	"github.com/ZiarZer/DiscordDel/types"
 	"github.com/ZiarZer/DiscordDel/utils"
 	"github.com/ZiarZer/DiscordDel/wsbase"
@@ -40,12 +39,12 @@ type GetChannelRequestBody struct {
 }
 
 type StartActionRequestBody struct {
-	AuthorizationToken string                `json:"authorizationToken"`
-	AuthorIds          []types.Snowflake     `json:"authorIds"`
-	Type               types.ActionType      `json:"type"`
-	Scope              types.Scope           `json:"scope"`
-	TargetId           *types.Snowflake      `json:"targetId"`
-	Options            *delete.DeleteOptions `json:"options"`
+	AuthorizationToken string               `json:"authorizationToken"`
+	AuthorIds          []types.Snowflake    `json:"authorIds"`
+	Type               types.ActionType     `json:"type"`
+	Scope              types.Scope          `json:"scope"`
+	TargetId           *types.Snowflake     `json:"targetId"`
+	Options            *types.ActionOptions `json:"options"`
 }
 
 type StopCurrentActionRequestBody struct{}
@@ -217,12 +216,12 @@ func (body *StartActionRequestBody) handle(ctx context.Context, conn *websocket.
 		if body.Scope == utils.CHANNEL {
 			crawler.CrawlChannel(authorizedContext, body.AuthorIds, *body.TargetId)
 		} else if body.Scope == utils.GUILD {
-			crawler.CrawlGuild(authorizedContext, body.AuthorIds, *body.TargetId)
+			crawler.CrawlGuild(authorizedContext, body.AuthorIds, *body.TargetId, body.Options != nil && body.Options.CrawlReactions)
 		} else if body.Scope == utils.ALL {
-			crawler.CrawlAllGuilds(authorizedContext, body.AuthorIds)
+			crawler.CrawlAllGuilds(authorizedContext, body.AuthorIds, body.Options.CrawlReactions)
 		}
 	} else if body.Type == utils.DELETE {
-		var options delete.DeleteOptions
+		var options types.ActionOptions
 		if body.Options != nil {
 			options = *body.Options
 		}

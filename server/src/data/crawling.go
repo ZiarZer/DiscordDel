@@ -12,12 +12,13 @@ import (
 func (repo *Repository) createCrawlingTable() error {
 	_, err := repo.db.Exec(
 		"CREATE TABLE IF NOT EXISTS `crawling` (\n" +
-			"`channel_id` varchar(20) NOT NULL,\n" +
+			"`object_id` varchar(20) NOT NULL,\n" +
+			"`object_type` varchar(7) NOT NULL,\n" +
 			"`oldest_read_id` varchar(20) NOT NULL,\n" +
 			"`newest_read_id` varchar(20) NOT NULL,\n" +
 			"`reached_top` boolean NOT NULL DEFAULT FALSE,\n" +
 			"`last_update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n" +
-			"PRIMARY KEY(`channel_id`))",
+			"PRIMARY KEY(`object_id`))",
 	)
 	if err != nil {
 		utils.InternalLog("Failed to create `crawling` table", utils.FATAL)
@@ -26,14 +27,15 @@ func (repo *Repository) createCrawlingTable() error {
 	return nil
 }
 
-func (repo *Repository) GetChannelCrawlingInfo(channelId types.Snowflake) (*types.CrawlingInfo, error) {
-	stmt, err := repo.db.Prepare("SELECT `channel_id`, `oldest_read_id`, `newest_read_id`, `reached_top` FROM `crawling` WHERE `channel_id` = ?")
+func (repo *Repository) GetCrawlingInfo(objectId types.Snowflake) (*types.CrawlingInfo, error) {
+	stmt, err := repo.db.Prepare("SELECT `object_id`, `oldest_read_id`, `newest_read_id`, `reached_top` FROM `crawling` WHERE `object_id` = ?")
 	if err != nil {
+		println(err.Error())
 		utils.InternalLog("Failed to prepare getting channel crawling info", utils.ERROR)
 		return nil, err
 	}
 	var crawlingInfo types.CrawlingInfo
-	err = stmt.QueryRow(channelId).Scan(&crawlingInfo.ChannelId, &crawlingInfo.OldestReadId, &crawlingInfo.NewestReadId, &crawlingInfo.ReachedTop)
+	err = stmt.QueryRow(objectId).Scan(&crawlingInfo.ObjectId, &crawlingInfo.OldestReadId, &crawlingInfo.NewestReadId, &crawlingInfo.ReachedTop)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	} else if err != nil {
@@ -42,22 +44,22 @@ func (repo *Repository) GetChannelCrawlingInfo(channelId types.Snowflake) (*type
 	return &crawlingInfo, nil
 }
 
-func (repo *Repository) InsertChannelCrawlingInfo(channelId types.Snowflake, oldestReadId types.Snowflake, newestReadId types.Snowflake, reachedTop bool) error {
-	stmt, err := repo.db.Prepare("INSERT INTO `crawling` (`channel_id`, `oldest_read_id`, `newest_read_id`, `reached_top`) VALUES (?, ?, ?, ?)")
+func (repo *Repository) InsertCrawlingInfo(objectId types.Snowflake, objectType string, oldestReadId types.Snowflake, newestReadId types.Snowflake, reachedTop bool) error {
+	stmt, err := repo.db.Prepare("INSERT INTO `crawling` (`object_id`, `object_type`, `oldest_read_id`, `newest_read_id`, `reached_top`) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
-		utils.InternalLog("Failed to prepare new channel crawling info insertion", utils.ERROR)
+		utils.InternalLog("Failed to prepare new crawling info insertion", utils.ERROR)
 		return err
 	}
-	_, err = stmt.Exec(channelId, oldestReadId, newestReadId, reachedTop)
+	_, err = stmt.Exec(objectId, objectType, oldestReadId, newestReadId, reachedTop)
 
 	if err != nil {
-		utils.InternalLog("Failed to insert new channel crawling info", utils.ERROR)
+		utils.InternalLog("Failed to insert new crawling info", utils.ERROR)
 		return err
 	}
 	return nil
 }
 
-func (repo *Repository) UpdateChannelCrawlingInfo(channelId types.Snowflake, oldestReadId *types.Snowflake, newestReadId *types.Snowflake, reachedTop *bool) error {
+func (repo *Repository) UpdateCrawlingInfo(objectId types.Snowflake, oldestReadId *types.Snowflake, newestReadId *types.Snowflake, reachedTop *bool) error {
 	queryParams := []interface{}{}
 	preparedUpdates := []string{}
 	if oldestReadId != nil {
@@ -75,63 +77,63 @@ func (repo *Repository) UpdateChannelCrawlingInfo(channelId types.Snowflake, old
 	if len(queryParams) == 0 {
 		return nil
 	}
-	queryParams = append(queryParams, channelId)
+	queryParams = append(queryParams, objectId)
 
-	query := fmt.Sprintf("UPDATE `crawling` SET %s WHERE `channel_id` = ?", strings.Join(preparedUpdates, ", "))
+	query := fmt.Sprintf("UPDATE `crawling` SET %s WHERE `object_id` = ?", strings.Join(preparedUpdates, ", "))
 	stmt, err := repo.db.Prepare(query)
 	if err != nil {
-		utils.InternalLog("Failed to prepare new channel crawling info insertion", utils.ERROR)
+		utils.InternalLog("Failed to prepare new crawling info insertion", utils.ERROR)
 		return err
 	}
 	_, err = stmt.Exec(queryParams...)
 
 	if err != nil {
-		utils.InternalLog("Failed to update channel crawling info", utils.ERROR)
+		utils.InternalLog("Failed to update crawling info", utils.ERROR)
 		return err
 	}
 	return nil
 }
 
-func (repo *Repository) UpdateChannelCrawlingOldestReadId(channelId types.Snowflake, updatedOldestReadId types.Snowflake) error {
-	stmt, err := repo.db.Prepare("UPDATE `crawling` SET `oldest_read_id` = ? WHERE `channel_id` = ?")
+func (repo *Repository) UpdateCrawlingOldestReadId(objectId types.Snowflake, updatedOldestReadId types.Snowflake) error {
+	stmt, err := repo.db.Prepare("UPDATE `crawling` SET `oldest_read_id` = ? WHERE `object_id` = ?")
 	if err != nil {
-		utils.InternalLog("Failed to prepare channel crawling info update", utils.ERROR)
+		utils.InternalLog("Failed to prepare crawling info update", utils.ERROR)
 		return err
 	}
-	_, err = stmt.Exec(updatedOldestReadId, channelId)
+	_, err = stmt.Exec(updatedOldestReadId, objectId)
 
 	if err != nil {
-		utils.InternalLog("Failed to update channel crawling info", utils.ERROR)
-		return err
-	}
-	return nil
-}
-
-func (repo *Repository) UpdateChannelCrawlingNewestReadId(channelId types.Snowflake, updatedNewestReadId types.Snowflake) error {
-	stmt, err := repo.db.Prepare("UPDATE `crawling` SET `newest_read_id` = ? WHERE `channel_id` = ?")
-	if err != nil {
-		utils.InternalLog("Failed to prepare channel crawling info update", utils.ERROR)
-		return err
-	}
-	_, err = stmt.Exec(updatedNewestReadId, channelId)
-
-	if err != nil {
-		utils.InternalLog("Failed to update channel crawling info", utils.ERROR)
+		utils.InternalLog("Failed to update crawling info", utils.ERROR)
 		return err
 	}
 	return nil
 }
 
-func (repo *Repository) UpdateChannelCrawlingReachedTop(channelId types.Snowflake, updatedReachedTop bool) error {
-	stmt, err := repo.db.Prepare("UPDATE `crawling` SET `reached_top` = ? WHERE `channel_id` = ?")
+func (repo *Repository) UpdateCrawlingNewestReadId(objectId types.Snowflake, updatedNewestReadId types.Snowflake) error {
+	stmt, err := repo.db.Prepare("UPDATE `crawling` SET `newest_read_id` = ? WHERE `object_id` = ?")
 	if err != nil {
-		utils.InternalLog("Failed to prepare channel crawling info update", utils.ERROR)
+		utils.InternalLog("Failed to prepare crawling info update", utils.ERROR)
 		return err
 	}
-	_, err = stmt.Exec(updatedReachedTop, channelId)
+	_, err = stmt.Exec(updatedNewestReadId, objectId)
 
 	if err != nil {
-		utils.InternalLog("Failed to update channel crawling info", utils.ERROR)
+		utils.InternalLog("Failed to update crawling info", utils.ERROR)
+		return err
+	}
+	return nil
+}
+
+func (repo *Repository) UpdateCrawlingReachedTop(objectId types.Snowflake, updatedReachedTop bool) error {
+	stmt, err := repo.db.Prepare("UPDATE `crawling` SET `reached_top` = ? WHERE `object_id` = ?")
+	if err != nil {
+		utils.InternalLog("Failed to prepare crawling info update", utils.ERROR)
+		return err
+	}
+	_, err = stmt.Exec(updatedReachedTop, objectId)
+
+	if err != nil {
+		utils.InternalLog("Failed to update crawling info", utils.ERROR)
 		return err
 	}
 	return nil

@@ -16,6 +16,11 @@ type Guild struct {
 	Icon *string   `json:"icon"`
 }
 
+type GuildSearchResult struct {
+	MessageArrays [][]Message `json:"messages"`
+	TotalResults  int         `json:"total_results"`
+}
+
 type Channel struct {
 	Id             Snowflake       `json:"id"`
 	Name           *string         `json:"name"`

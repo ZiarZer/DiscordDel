@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -86,6 +87,46 @@ func (apiClient *ApiClient) getGuildById(ctx context.Context, guildId types.Snow
 
 func (apiClient *ApiClient) getGuildChannels(ctx context.Context, guildId types.Snowflake) (*http.Response, error) {
 	return apiClient.request(ctx, "GET", fmt.Sprintf("guilds/%s/channels", guildId), nil, 3)
+}
+
+type SearchGuildMessagesOptions struct {
+	AuthorIds  []types.Snowflake
+	ChannelIds []types.Snowflake
+	Offset     int
+	SortBy     *string
+	SortOrder  *string
+	MinId      *types.Snowflake // TODO: check this min_id param
+	MaxId      *types.Snowflake
+}
+
+func (apiClient *ApiClient) searchGuildMessages(ctx context.Context, guildId types.Snowflake, options *SearchGuildMessagesOptions) (*http.Response, error) {
+	searchParams := url.Values{}
+	if options != nil {
+		if options.Offset > 9975 {
+			return nil, errors.New("offset must be less than or equal to 9975")
+		}
+		searchParams.Add("offset", strconv.Itoa(options.Offset))
+
+		for _, authorId := range options.AuthorIds {
+			searchParams.Add("author_id", string(authorId))
+		}
+		for _, channelId := range options.ChannelIds {
+			searchParams.Add("channel_id", string(channelId))
+		}
+		if options.SortOrder != nil {
+			searchParams.Add("sort_order", *options.SortOrder)
+		}
+		if options.SortBy != nil {
+			searchParams.Add("sort_by", *options.SortBy)
+		}
+		if options.MinId != nil {
+			searchParams.Add("min_id", string(*options.MinId))
+		}
+		if options.MaxId != nil {
+			searchParams.Add("max_Id", string(*options.MaxId))
+		}
+	}
+	return apiClient.request(ctx, "GET", fmt.Sprintf("guilds/%s/messages/search?%s", guildId, searchParams.Encode()), nil, 3)
 }
 
 func (apiClient *ApiClient) getChannelById(ctx context.Context, channelId types.Snowflake) (*http.Response, error) {

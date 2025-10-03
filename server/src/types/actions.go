@@ -5,7 +5,7 @@ import (
 )
 
 type CrawlingInfo struct {
-	ChannelId    Snowflake `json:"channel_id"`
+	ObjectId     Snowflake `json:"object_id"`
 	OldestReadId Snowflake `json:"oldest_read_id"`
 	NewestReadId Snowflake `json:"newest_read_id"`
 	ReachedTop   bool      `json:"reached_top"`
@@ -22,4 +22,13 @@ type Action struct {
 	StartTime   time.Time
 	LogFunc     func(message string, logLevel *LogLevel)
 	LogEndTime  bool
+}
+
+type ActionOptions struct {
+	// Crawl options
+	CrawlReactions bool
+
+	// Delete options
+	DeletePinned             bool
+	DeleteThreadFirstMessage bool
 }

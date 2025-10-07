@@ -53,16 +53,16 @@ func (sdk *DiscordSdk) GetGuildChannels(ctx context.Context, guildId types.Snowf
 	return channels, nil
 }
 
-func (sdk *DiscordSdk) SearchGuildMessages(ctx context.Context, guildId types.Snowflake, options *SearchGuildMessagesOptions) ([]types.Message, error) {
+func (sdk *DiscordSdk) SearchGuildMessages(ctx context.Context, guildId types.Snowflake, options *SearchGuildMessagesOptions) ([]types.Message, []types.Channel, error) {
 	resp, err := sdk.ApiClient.searchGuildMessages(ctx, guildId, options)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
-		return nil, err
+		return nil, nil, err
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		utils.InternalLog(err.Error(), utils.ERROR)
-		return nil, err
+		return nil, nil, err
 	}
 	if resp.StatusCode != 200 {
 		sdk.Log(string(body), utils.ERROR)
@@ -77,6 +77,5 @@ func (sdk *DiscordSdk) SearchGuildMessages(ctx context.Context, guildId types.Sn
 	} else {
 		sdk.Log(fmt.Sprintf("Got %d messages in guild %s", len(result.MessageArrays), guildId), utils.SUCCESS)
 	}
-	sdk.Repo.InsertMultipleMessages(messages, "PENDING")
-	return messages, nil
+	return messages, result.Threads, nil
 }

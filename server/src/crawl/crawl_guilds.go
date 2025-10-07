@@ -69,11 +69,12 @@ func (crawler *Crawler) crawlGuildBySearch(ctx context.Context, authorIds []type
 }
 
 func (crawler *Crawler) fetchGuildMessagesBySearch(ctx context.Context, guildId types.Snowflake, options *discord.SearchGuildMessagesOptions) ([]types.Message, error) {
-	messages, err := crawler.Sdk.SearchGuildMessages(ctx, guildId, options)
+	messages, threads, err := crawler.Sdk.SearchGuildMessages(ctx, guildId, options)
 	if err != nil {
 		return nil, err
 	}
 
+	crawler.Sdk.Repo.InsertMultipleChannels(threads)
 	crawler.Sdk.Repo.InsertMultipleMessages(messages, "PENDING")
 	crawler.storeGuildMessagesCrawlingInfo(guildId, messages, options)
 	return messages, nil

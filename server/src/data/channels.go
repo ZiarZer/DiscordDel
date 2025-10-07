@@ -100,7 +100,7 @@ func (repo *Repository) GetChannelsWithPendingMessages(authorIds []types.Snowfla
 	var rows *sql.Rows
 	var err error
 	if guildId != nil {
-		query += " AND `guild_id` = ?"
+		query = "SELECT DISTINCT `channel_id` FROM `channels` c INNER JOIN `messages` m ON m.`channel_id` = c.`id` WHERE `status` = 'PENDING' AND `guild_id` = ? ORDER BY m.`id`"
 		stmt, err := repo.db.Prepare(query)
 		if err != nil {
 			utils.InternalLog("Failed to prepare getting guild channels with PENDING messages", utils.ERROR)

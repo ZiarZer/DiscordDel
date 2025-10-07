@@ -3,6 +3,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import styled from 'styled-components';
 
 import { version } from '../package.json';
+import { ActionStartPopin } from './components/ActionStartPopin';
 import { Console } from './components/Console';
 import { PaginatedList } from './components/PaginatedList';
 import { BigActionControlButton } from './components/BigActionControlButton';
@@ -17,7 +18,7 @@ import {
   LogEntry,
   User,
 } from './types';
-import { WebSocketLike } from 'react-use-websocket/dist/lib/types';
+import { ActionScope, ActionType } from './types/actions';
 
 const Wrapper = styled.div`
   display: flex;
@@ -215,12 +216,12 @@ function App() {
       }),
     [sendJsonMessage, authorizationToken, loadedGuild]
   );
-  const sendStartActionRequest = useCallback(
+  const onStartAction = useCallback(
     (
-      type: 'CRAWL' | 'DELETE',
-      scope: 'CHANNEL' | 'GUILD' | 'ALL',
+      type: ActionType,
+      scope: ActionScope,
       targetId?: string,
-      options?: string
+      options?: object
     ) => {
       sendJsonMessage({
         type: 'START_ACTION',
@@ -245,43 +246,68 @@ function App() {
     [sendJsonMessage]
   );
 
+  const [isPopinVisible, setIsPopinVisible] = useState(false);
+  const [popinProps, setPopinProps] = useState<{
+    type: ActionType;
+    scope: ActionScope;
+    targetId?: string;
+  }>({
+    type: 'CRAWL',
+    scope: 'ALL',
+    targetId: undefined,
+  });
+  const displayActionStartPopin = useCallback(
+    (type: ActionType, scope: ActionScope, targetId?: string) => {
+      setPopinProps({ type, scope, targetId });
+      setIsPopinVisible(true);
+    },
+    [setPopinProps, setIsPopinVisible]
+  );
+
   const userSectionActions = [
     { label: 'Get user guilds', onClick: sendGetUserGuildsRequest },
     {
       label: 'Crawl all guilds',
-      onClick: () => sendStartActionRequest('CRAWL', 'ALL'),
+      onClick: () => displayActionStartPopin('CRAWL', 'ALL'),
     },
     {
       label: 'Delete all crawled data',
-      onClick: () => sendStartActionRequest('DELETE', 'ALL'),
+      onClick: () => displayActionStartPopin('DELETE', 'ALL'),
     },
   ];
   const guildSectionActions = [
     { label: 'Get guild channels', onClick: sendGetGuildChannelsRequest },
     {
       label: 'Crawl guild',
-      onClick: () => sendStartActionRequest('CRAWL', 'GUILD', loadedGuild?.id),
+      onClick: () => displayActionStartPopin('CRAWL', 'GUILD', loadedGuild?.id),
     },
     {
       label: 'Delete guild crawled data',
-      onClick: () => sendStartActionRequest('DELETE', 'GUILD', loadedGuild?.id),
+      onClick: () =>
+        displayActionStartPopin('DELETE', 'GUILD', loadedGuild?.id),
     },
   ];
   const channelSectionActions = [
     {
       label: 'Crawl channel',
       onClick: () =>
-        sendStartActionRequest('CRAWL', 'CHANNEL', loadedChannel?.id),
+        displayActionStartPopin('CRAWL', 'CHANNEL', loadedChannel?.id),
     },
     {
       label: 'Delete channel crawled data',
       onClick: () =>
-        sendStartActionRequest('DELETE', 'CHANNEL', loadedChannel?.id),
+        displayActionStartPopin('DELETE', 'CHANNEL', loadedChannel?.id),
     },
   ];
 
   return (
     <>
+      <ActionStartPopin
+        {...popinProps}
+        onStartAction={onStartAction}
+        isOpen={isPopinVisible}
+        onClose={() => setIsPopinVisible(false)}
+      />
       <WebsocketReconnectBanner
         readyState={readyState}
         retry={() =>
@@ -347,7 +373,7 @@ function App() {
             action={currentAction}
             running={isActionRunning}
             onStopAction={sendStopCurrentActionRequest}
-            onResumeLastAction={sendStartActionRequest}
+            onResumeLastAction={onStartAction}
           />
           <PaginatedList
             resultsList={resultsList}

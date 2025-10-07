@@ -18,6 +18,7 @@ type Guild struct {
 
 type GuildSearchResult struct {
 	MessageArrays [][]Message `json:"messages"`
+	Threads       []Channel   `json:"threads"`
 	TotalResults  int         `json:"total_results"`
 }
 

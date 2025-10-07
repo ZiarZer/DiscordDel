@@ -95,7 +95,7 @@ type SearchGuildMessagesOptions struct {
 	Offset     int
 	SortBy     *string
 	SortOrder  *string
-	MinId      *types.Snowflake // TODO: check this min_id param
+	MinId      *types.Snowflake
 	MaxId      *types.Snowflake
 }
 

@@ -25,9 +25,11 @@ export type Channel = {
   parent_id?: string;
 }
 
+export type ActionType = 'CRAWL' | 'DELETE';
+export type ActionScope = 'ALL' | 'GUILD' | 'CHANNEL';
 export type Action = {
-  type: 'CRAWL' | 'DELETE';
-  scope: 'CHANNEL' | 'GUILD' | 'ALL';
+  type: ActionType;
+  scope: ActionScope;
   targetId?: string;
 }
 

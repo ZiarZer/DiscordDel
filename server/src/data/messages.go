@@ -56,6 +56,9 @@ func (repo *Repository) InsertMultipleMessages(messages []types.Message, status 
 		}
 		params[7*i+5] = messages[i].Pinned
 		params[7*i+6] = status
+		if messages[i].ChannelId == messages[i].Id {
+			params[7*i+6] = "THREAD_FIRST_MESSAGE"
+		}
 	}
 	_, err = stmt.Exec(params...)
 	if err != nil {

@@ -1,6 +1,5 @@
 import styled from 'styled-components';
-import { Log } from './Log';
-import { Action } from '../types';
+import { Action, ActionType, ActionScope } from '../types';
 import { useMemo } from 'react';
 
 const Wrapper = styled.div<{ $backgroundcolor: string }>`
@@ -25,17 +24,17 @@ const SectionTitle = styled.h2`
 `;
 
 export function BigActionControlButton({
-  action,
+  action = null,
   running = false,
   onStopAction,
   onResumeLastAction,
 }: {
-  action?: Action;
+  action?: Action | null;
   running?: boolean;
   onStopAction: () => void;
   onResumeLastAction: (
-    type: 'CRAWL' | 'DELETE',
-    scope: 'CHANNEL' | 'GUILD' | 'ALL',
+    type: ActionType,
+    scope: ActionScope,
     targetId?: string
   ) => void;
 }) {

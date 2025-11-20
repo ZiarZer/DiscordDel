@@ -72,7 +72,7 @@ func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, author
 	}
 	if !options.DeleteThreadFirstMessage {
 		messagesToDelete = utils.Filter(messagesToDelete, func(message types.Message) bool {
-			return message.Status == nil || *message.Status != "THREAD_FIRST_MESSAGE"
+			return message.Status == nil || message.Id == message.ChannelId
 		})
 	}
 	if len(messagesToDelete) == 0 {
@@ -87,7 +87,7 @@ func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, author
 	if channel.ThreadMetadata != nil {
 		if channel.ThreadMetadata.Locked {
 			messageIds := utils.Map(messagesToDelete, func(message types.Message) types.Snowflake { return message.Id })
-			deleter.Sdk.Repo.UpdateMessagesStatus(messageIds, "ERROR")
+			deleter.Sdk.Repo.UpdateMessagesStatus(messageIds, types.ERROR)
 			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d messages to delete", channelId, len(messageIds)), utils.ERROR)
 			return nil
 		} else if channel.ThreadMetadata.Archived {
@@ -104,14 +104,14 @@ func (deleter *Deleter) deleteChannelCrawledMessages(ctx context.Context, author
 			return err
 		}
 		if success {
-			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "DELETED")
-			deleter.Sdk.Repo.UpdateReactionsStatusByMessageId(messagesToDelete[i].Id, "DELETED")
+			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, types.DELETED)
+			deleter.Sdk.Repo.UpdateReactionsStatusByMessageId(messagesToDelete[i].Id, types.DELETED)
 
 			if len(messagesToDelete[i].Content) > 0 {
 				deleter.Sdk.Log(messagesToDelete[i].Content, nil)
 			}
 		} else {
-			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, "ERROR")
+			deleter.Sdk.Repo.UpdateMessagesStatus([]types.Snowflake{messagesToDelete[i].Id}, types.ERROR)
 		}
 	}
 	return nil
@@ -139,7 +139,7 @@ func (deleter *Deleter) deleteChannelCrawledReactions(ctx context.Context, autho
 	}
 	if channel.ThreadMetadata != nil {
 		if channel.ThreadMetadata.Locked {
-			deleter.Sdk.Repo.UpdateReactionsStatus(reactions, "ERROR")
+			deleter.Sdk.Repo.UpdateReactionsStatus(reactions, types.ERROR)
 			deleter.Sdk.Log(fmt.Sprintf("Thread %s is locked, skipping %d reactions to delete", channelId, len(reactions)), utils.ERROR)
 			return nil
 		} else if channel.ThreadMetadata.Archived {
@@ -156,9 +156,9 @@ func (deleter *Deleter) deleteChannelCrawledReactions(ctx context.Context, autho
 			return err
 		}
 		if success {
-			deleter.Sdk.Repo.UpdateReactionsStatus([]types.Reaction{reactions[i]}, "DELETED")
+			deleter.Sdk.Repo.UpdateReactionsStatus([]types.Reaction{reactions[i]}, types.DELETED)
 		} else {
-			deleter.Sdk.Repo.UpdateReactionsStatus([]types.Reaction{reactions[i]}, "ERROR")
+			deleter.Sdk.Repo.UpdateReactionsStatus([]types.Reaction{reactions[i]}, types.ERROR)
 		}
 	}
 	return nil

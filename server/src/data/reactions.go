@@ -98,7 +98,7 @@ func (repo *Repository) GetPendingReactionsByChannelId(channelId types.Snowflake
 	return reactions, nil
 }
 
-func (repo *Repository) UpdateReactionsStatus(reactions []types.Reaction, updatedStatus string) error {
+func (repo *Repository) UpdateReactionsStatus(reactions []types.Reaction, updatedStatus types.CrawlingStatus) error {
 	if len(reactions) == 0 {
 		return nil
 	}
@@ -121,7 +121,7 @@ func (repo *Repository) UpdateReactionsStatus(reactions []types.Reaction, update
 	return nil
 }
 
-func (repo *Repository) UpdateReactionsStatusByMessageId(messageId types.Snowflake, updatedStatus string) error {
+func (repo *Repository) UpdateReactionsStatusByMessageId(messageId types.Snowflake, updatedStatus types.CrawlingStatus) error {
 	stmt, err := repo.db.Prepare("UPDATE `reactions` SET `status` = ? WHERE `message_id` = ?")
 	if err != nil {
 		utils.InternalLog("Failed to prepare reactions status update", utils.ERROR)

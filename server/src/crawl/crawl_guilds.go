@@ -75,7 +75,7 @@ func (crawler *Crawler) fetchGuildMessagesBySearch(ctx context.Context, guildId 
 	}
 
 	crawler.Sdk.Repo.InsertMultipleChannels(threads)
-	crawler.Sdk.Repo.InsertMultipleMessages(messages, "PENDING")
+	crawler.Sdk.Repo.InsertMultipleMessages(messages, types.PENDING)
 	crawler.storeGuildMessagesCrawlingInfo(guildId, messages, options)
 	return messages, nil
 }

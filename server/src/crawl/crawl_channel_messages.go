@@ -28,7 +28,11 @@ func (crawler *Crawler) crawlChannelMessages(ctx context.Context, channel *types
 			}
 			if threadsData != nil {
 				firstMessage := threadsData.Threads[channel.Id].FirstMessage
-				crawler.Sdk.Repo.InsertMultipleMessages([]types.Message{firstMessage}, "THREAD_FIRST_MESSAGE")
+				status := types.SKIPPED
+				if slices.Contains(authorIds, firstMessage.Author.Id) {
+					status = types.PENDING
+				}
+				crawler.Sdk.Repo.InsertMultipleMessages([]types.Message{firstMessage}, status)
 			}
 		}
 	}
@@ -89,7 +93,7 @@ func (crawler *Crawler) fetchChannelMessages(ctx context.Context, authorIds []ty
 		return slices.Contains(authorIds, message.Author.Id) ||
 			(message.InteractionMetadata != nil && slices.Contains(authorIds, message.InteractionMetadata.Triggerer.Id))
 	})
-	crawler.Sdk.Repo.InsertMultipleMessages(messagesToStore, "PENDING")
+	crawler.Sdk.Repo.InsertMultipleMessages(messagesToStore, types.PENDING)
 	for i := range messages {
 		if messages[i].Reactions != nil {
 			crawler.crawlMessageReactions(ctx, &messages[i], authorIds)

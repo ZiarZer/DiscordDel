@@ -4,6 +4,15 @@ import (
 	"time"
 )
 
+type CrawlingStatus string
+
+const (
+	PENDING CrawlingStatus = "PENDING"
+	SKIPPED CrawlingStatus = "SKIPPED"
+	DELETED CrawlingStatus = "DELETED"
+	ERROR   CrawlingStatus = "ERROR"
+)
+
 type CrawlingInfo struct {
 	ObjectId     Snowflake `json:"object_id"`
 	OldestReadId Snowflake `json:"oldest_read_id"`

@@ -28,7 +28,7 @@ func (repo *Repository) createMessagesTable() error {
 	return nil
 }
 
-func (repo *Repository) InsertMultipleMessages(messages []types.Message, status string) error {
+func (repo *Repository) InsertMultipleMessages(messages []types.Message, status types.CrawlingStatus) error {
 	if len(messages) == 0 {
 		return nil
 	}
@@ -56,9 +56,6 @@ func (repo *Repository) InsertMultipleMessages(messages []types.Message, status 
 		}
 		params[7*i+5] = messages[i].Pinned
 		params[7*i+6] = status
-		if messages[i].ChannelId == messages[i].Id {
-			params[7*i+6] = "THREAD_FIRST_MESSAGE"
-		}
 	}
 	_, err = stmt.Exec(params...)
 	if err != nil {
@@ -105,7 +102,7 @@ func (repo *Repository) GetPendingMessagesByChannelId(channelId types.Snowflake,
 	return messages, nil
 }
 
-func (repo *Repository) UpdateMessagesStatus(messageIds []types.Snowflake, updatedStatus string) error {
+func (repo *Repository) UpdateMessagesStatus(messageIds []types.Snowflake, updatedStatus types.CrawlingStatus) error {
 	if len(messageIds) == 0 {
 		return nil
 	}

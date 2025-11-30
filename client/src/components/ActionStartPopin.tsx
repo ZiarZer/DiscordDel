@@ -14,6 +14,10 @@ const ActionOptions = {
   },
 };
 
+const ButtonsWrapper = styled.div`
+  display: flex;
+  gap: 1em;
+`;
 const Checkbox = styled.input.attrs({ type: 'checkbox' })``;
 
 type ActionStartPopinProps = {
@@ -75,10 +79,10 @@ export function ActionStartPopin({
           {label}
         </label>
       ))}
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <ButtonsWrapper>
         <Button onClick={handleStartAction}>Start action</Button>
         <Button onClick={onClose}>Cancel</Button>
-      </div>
+      </ButtonsWrapper>
     </Popin>
   );
 }

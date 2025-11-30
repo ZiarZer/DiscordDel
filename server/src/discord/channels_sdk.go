@@ -10,6 +10,19 @@ import (
 	"github.com/ZiarZer/DiscordDel/utils"
 )
 
+func getChannelDesignation(channel types.Channel) string {
+	if channel.Name != nil {
+		return *channel.Name
+	}
+	if len(channel.Recipients) == 0 {
+		return "DM (alone)"
+	}
+	if channel.Type == types.Dm {
+		return fmt.Sprintf("DM with @%s", channel.Recipients[0].Username)
+	}
+	return fmt.Sprintf("(type %d)", channel.Type)
+}
+
 func (sdk *DiscordSdk) GetChannel(ctx context.Context, channelId types.Snowflake) (*types.Channel, error) {
 	resp, err := sdk.ApiClient.getChannelById(ctx, channelId)
 	if err != nil {
@@ -27,7 +40,7 @@ func (sdk *DiscordSdk) GetChannel(ctx context.Context, channelId types.Snowflake
 	}
 	var channel types.Channel
 	json.Unmarshal(body, &channel)
-	sdk.Log(fmt.Sprintf("Successfully got channel %s (#%s)", *channel.Name, channelId), utils.SUCCESS)
+	sdk.Log(fmt.Sprintf("Successfully got channel %s (#%s)", getChannelDesignation(channel), channelId), utils.SUCCESS)
 	sdk.Repo.InsertChannel(channel)
 	return &channel, nil
 }

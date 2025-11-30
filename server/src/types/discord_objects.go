@@ -31,6 +31,7 @@ type Channel struct {
 	GuildId        *Snowflake      `json:"guild_id"`
 	MessageCount   *int            `json:"message_count"`
 	ThreadMetadata *ThreadMetadata `json:"thread_metadata"`
+	Recipients     []User          `json:"recipients"`
 }
 
 type Message struct {
